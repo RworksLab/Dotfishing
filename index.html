@@ -331,7 +331,7 @@ const sprURL={};const fishURL=(id,sil)=>{const k=id+(sil?'s':'');return sprURL[k
 
 /* ---------- 画面描画 ---------- */
 const view=$('#view');
-function updTop(){$('#hDate').innerHTML=`${ico('moon',1)} ${S.day}日目 ${fmt(S.min)} ${band(S.min)==='夕'?'夕方':band(S.min)}${DEV()?' <span class="tag" style="background:#6a4aa8">開発</span>':''}`;$('#hCoin').innerHTML=`${ico('coin',1)} ${S.coins.toLocaleString()}`;
+function updTop(){$('#hDate').innerHTML=`${ico('moon',1)} ${S.day}日目 ${fmt(S.min)} ${band(S.min)==='夕'?'夕方':band(S.min)}`;$('#hCoin').innerHTML=`${ico('coin',1)} ${S.coins.toLocaleString()}`;
 document.querySelectorAll('nav .wb').forEach(b=>b.classList.toggle('on',b.dataset.v===(scr==='fishing'?'spots':scr==='quests'||scr==='closet'||scr==='cooler'?'home':scr)))}
 let toastT;function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('show'),1800)}
 function modal(h){$('#mbox').innerHTML=h;$('#modal').classList.add('show')}
@@ -340,7 +340,7 @@ function go(s){if(scr==='fishing'&&F&&['wait','hit','play'].includes(F.phase)&&s
 function render(){aqAll=DEV();updTop();cvMode='';mapOpen=false;view.classList.toggle('full',scr==='aqua'||scr==='fishing'||scr==='home'||scr==='spots');({cooler:vCooler,closet:vCloset,home:vHome,spots:vSpots,fishing:vFishing,aqua:vAqua,dex:vDex,shop:vShop,quests:vQuests})[scr]();view.scrollTop=0}
 
 function questRows(){return S.quests.map((q,i)=>{const o=qInfo(q);return`<div class="row"><div><div><span class="tag" style="background:${['#4a9a4a','#d08a10','#c8403a'][i]}">${q.d}</span> ${o.txt}</div><div class="muted">${o.cur}/${o.need}・報酬 ${q.rw}コイン</div></div>${q.got?'<span class="muted">受取済</span>':o.ok?`<button class="wb sm gold" data-act="claim" data-v="${i}">受け取る</button>`:'<span class="muted">未達成</span>'}</div>`}).join('')}
-const DEV=()=>false;const VER='1.0.4';
+const DEV=()=>false;const VER='1.0.5';
 let HOFF=0,homeCv=null;const extC={};
 function vHome(){const inv=S.inv,ready=S.quests.filter(q=>!q.got&&qInfo(q).ok).length;
 view.innerHTML=`<div id="hmBox" style="position:relative;height:100%;overflow:hidden;background:#0c0f18">
@@ -565,7 +565,7 @@ const[wx,wy]=isl.wf;for(let k=0;k<5;k++)P(g,wx,wy-6+((t*12+k*2)%7),'#ffffff');P(
 if(islSel>=0&&Math.floor(t*3)%2===0){const e=isl.edge[islSel];g.fillStyle='#ffd84a';for(let k=0;k<e.length;k+=2)g.fillRect(e[k],e[k+1],1,1)}
 isl.pins.forEach(([x,y],i)=>{if(i===6){const bb=Math.round(Math.sin(t*2)*1);R(g,x-1,y-6+bb,3,5,'#e04a3a');R(g,x-1,y-4+bb,3,1,'#ffffff');R(g,x-2,y-1+bb,5,2,'#e04a3a');P(g,x,y-7+bb,'#fff6c0');return}const u=!SPOTS[i].soon&&(S.unl[SPOTS[i].id]||DEV());R(g,x,y-8,1,8,'#5a3a22');R(g,x+1,y-8,5,4,u?'#e04a3a':'#6a6a74');P(g,x+1,y-8,u?'#ff8a7a':'#9a9aa4');if(!u){R(g,x-2,y-2,5,4,'#c8a040');R(g,x-1,y-4,3,2,'#8a6a20');P(g,x,y-1,'#3a2a10')}});
 const cur=S.lastSpot||0,[qx,qy]=isl.pins[cur],bb=Math.round(Math.sin(t*4)*1.5);sprC(g,false,charPal(S.look2),qx-13,qy-18+bb,S.look2,(t%3)<.12)}
-function islPanel(){const e=$('#islPanel');if(!e)return;if(islSel<0){e.style.display='none';return}const i=islSel,s=SPOTS[i],u=S.unl[s.id]||DEV(),got=FISH.filter(f=>f.spot===i&&S.dex[f.i]).length;if(s.soon){e.style.display='block';e.innerHTML=`<h2 style="margin:0 0 4px">${s.name} <span class="tag" style="background:#6a6a74">準備中</span></h2><p class="muted" style="margin:0 0 8px">${s.desc}・適正パワー ${s.rec}。アップデートで追加予定です。</p>${DEV()?`<button class="wb big" data-act="fish" data-v="${i}">景色をプレビュー（開発）</button>`:''}`;return}
+function islPanel(){const e=$('#islPanel');if(!e)return;if(islSel<0){e.style.display='none';return}const i=islSel,s=SPOTS[i],u=S.unl[s.id]||DEV(),got=FISH.filter(f=>f.spot===i&&S.dex[f.i]).length;if(s.soon){e.style.display='block';e.innerHTML=`<h2 style="margin:0 0 4px">${s.name} <span class="tag" style="background:#6a6a74">準備中</span></h2><p class="muted" style="margin:0 0 8px">${s.desc}・適正パワー ${s.rec}。アップデートで追加予定です。</p>`;return}
 e.style.display='block';e.innerHTML=`<h2 style="margin:0 0 4px"><span class="mk">${mark(s.rec)}</span>${s.name}${i===(S.lastSpot||0)?' <span class="tag" style="background:#4a7ad0">現在地</span>':''}</h2>
 <p class="muted" style="margin:0 0 8px">${s.desc}・適正パワー ${s.rec}・図鑑 ${got}/10</p>
 ${u?`<button class="wb big gold" data-act="fish" data-v="${i}">${ico('rod')}ここへ移動して釣る</button>`:`<button class="wb big gold" data-act="unlock" data-v="${i}">${ico('coin')}${s.cost.toLocaleString()} コインで解放</button>`}`}
@@ -596,7 +596,7 @@ function vAqua(){view.innerHTML=`<div id="aqBox" style="position:relative;height
 const cv=$('#cv'),bx=$('#aqBox');cv.width=AW;AH=Math.max(280,Math.floor(bx.clientHeight*AW/bx.clientWidth));cv.height=AH;AWY=AH-Math.max(64,Math.round(AH*.22));const ky=(AWY-44)/180;AQR.forEach(r=>r.tanks.forEach(t=>{t.y=Math.round(26+(t.oy-26)*ky);t.h=Math.round(t.oh*ky)}));aqEnter(aqRoom);cvMode='aq'}
 const cellHTML=f=>{const c=S.dex[f.i]||DEV();return`<button class="cell${c?'':' no'}" data-act="info" data-v="${f.i}"><img class="sprite" src="${fishURL(f.i,!c)}" alt="">${c?f.name:'？？？'}<span class="star">${stars(f.r)}</span></button>`};
 function vDex(){const L=FISH.filter(f=>(dexF.spot<0||f.spot===dexF.spot)&&(!dexF.r||f.r===dexF.r));
-view.innerHTML=`<div class="panel"><h2>${ico('book',1)}魚図鑑 ${Object.keys(S.dex).length}/50</h2>
+view.innerHTML=`<div class="panel"><h2>${ico('book',1)}魚図鑑 ${Object.keys(S.dex).length}/${FISH.length}</h2>
 <div class="tabs"><button class="wb sm${dexF.spot<0?' on':''}" data-act="dxs" data-v="-1">すべて</button>${SPOTS.map((s,i)=>s.soon?'':`<button class="wb sm${dexF.spot===i?' on':''}" data-act="dxs" data-v="${i}">${s.name}</button>`).join('')}</div>
 <div class="tabs"><button class="wb sm${!dexF.r?' on':''}" data-act="dxr" data-v="0">全レア度</button>${[1,2,3,4,5].map(r=>`<button class="wb sm${dexF.r===r?' on':''}" data-act="dxr" data-v="${r}">★${r}</button>`).join('')}</div>
 <div class="grid">${L.map(cellHTML).join('')}</div></div>`}
@@ -620,7 +620,7 @@ return gearC[k]=c.toDataURL()}
 function vShop(){const G=GEAR[shopTab];view.innerHTML=`<div class="panel"><h2>${ico('bag',1)}釣り具ショップ</h2><p>合計釣りパワー <b style="font-size:22px;font-weight:400">${power()}</b></p>
 <div class="tabs" style="margin:6px 0 0">${Object.keys(GEAR).map(k=>`<button class="wb sm${k===shopTab?' on':''}" data-act="tab" data-v="${k}">${GEAR[k].label}</button>`).join('')}</div></div>
 <div class="panel"><p class="muted">${G.label}：${G.eff}</p>${G.items.map((it,i)=>{const own=S.own[shopTab].includes(i)||DEV(),eq=S.eq[shopTab]===i;
-return`<div class="row"><img src="${gearIcon(shopTab,i)}" alt="" style="width:48px;height:48px;image-rendering:pixelated;flex:none;background:#efdcb4;border:2px solid #b08a5a"><div style="flex:1"><div>${it[0]}</div><div class="muted">釣りパワー ${it[1]}${own?'':`・${it[2].toLocaleString()}コイン`}</div></div>${eq?'<span class="muted">装備中</span>':own?`<button class="wb sm" data-act="equip" data-v="${i}">装備する</button>`:`<button class="wb sm gold" data-act="buy" data-v="${i}">購入</button>`}</div>`}).join('')}</div><p class="note">性能値・価格は仮設定です</p>`}
+return`<div class="row"><img src="${gearIcon(shopTab,i)}" alt="" style="width:48px;height:48px;image-rendering:pixelated;flex:none;background:#efdcb4;border:2px solid #b08a5a"><div style="flex:1"><div>${it[0]}</div><div class="muted">釣りパワー ${it[1]}${own?'':`・${it[2].toLocaleString()}コイン`}</div></div>${eq?'<span class="muted">装備中</span>':own?`<button class="wb sm" data-act="equip" data-v="${i}">装備する</button>`:`<button class="wb sm gold" data-act="buy" data-v="${i}">購入</button>`}</div>`}).join('')}</div>`}
 
 function info(id){const f=FISH[id],c=S.dex[id],s=SPOTS[f.spot],k=c||DEV();
 modal(`<div style="text-align:center"><img class="sprite l" src="${fishURL(id,!k)}" alt=""><h2 style="justify-content:center">${k?f.name:'？？？'}</h2><div class="star">${stars(f.r)}</div></div>
