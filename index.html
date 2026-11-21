@@ -249,7 +249,7 @@ let xi=0;const FNCH=[[110,165,220,262],[87,131,175,220],[98,147,196,247],[82,123
 const AQCH=[[131,165,196,247],[110,131,165,196],[87,110,131,165],[98,123,147,165]];let ai=0;
 let mBus=null,mKey='';function bus(k){if(mKey!==k){if(mBus){const g=mBus;g.gain.setTargetAtTime(0,AC.currentTime,.07);setTimeout(()=>{try{g.disconnect()}catch(e){}},1500)}mBus=AC.createGain();mBus.connect(AC.destination);mKey=k}return mBus}
 setInterval(()=>{if(!AC||AC.state!=='running'||!S||S.set.bgm<=0)return;const v=S.set.bgm;const nt=band(S.min)==='夕'||band(S.min)==='夜',mg=cvMode==='mini',B=bus(mg?'mini':scr==='aqua'?'aqua':nt?'night':'day');
-if(mg){const RT=[110,87.3,98,82.4],AR=[[440,523,659],[349,440,523],[392,494,587],[330,415,494]],PT=[0,-1,1,-1,2,-1,1,2,0,-1,1,-1,2,1,2,-1],RISE=[659,698,740,831];for(let h=0;h<3;h++){const st=(xi*3+h)%64,c=Math.floor(st/16),p=st%16,w=h*.1;tone(p%2?RT[c]*2:RT[c],.09,'square',v*.42,w,B);if(p%4===0)tone(55,.09,'sine',v*.9,w,B);if(p%2)tone(8000,.015,'square',v*.07,w,B);const n=c===3&&p>=12?RISE[p-12]:PT[p]>=0?AR[c][PT[p]]:0;if(n)tone(n,.07,'square',v*.28,w,B);if(p===0)tone(AR[c][0]/2,.25,'triangle',v*.35,w,B)}xi++;return}
+if(mg){const RT=[110,87.3,98,82.4],FR=[null,[523,587,659,698],null,[659,698,740,831]];for(let h=0;h<3;h++){const st=(xi*3+h)%64,c=Math.floor(st/16),p=st%16,w=h*.1;if(p%2===0)tone(p%4?RT[c]*1.5:RT[c],.12,'triangle',v*.7,w,B);if(p%8===0)tone(55,.09,'sine',v*.8,w,B);const f=FR[c];if(f&&p>=12)tone(f[p-12],.09,'square',v*.22,w,B)}xi++;return}
 if(scr!=='aqua'&&(band(S.min)==='夕'||band(S.min)==='夜')){if(fi%2===0){const n=FNIGHT[(fi/2)%FNIGHT.length];if(n){bell(n,v*.55,0,B);bell(n,v*.2,.5,B)}}if(fi%32===0)FNCH[Math.floor(fi/32)%4].forEach((f,k)=>pad(f*2,9.6,v*(k?.55:.8),k*.1,B));fi++;return}
 if(scr==='aqua'){if(ai%2===0){const n=AQMEL[(ai/2)%AQMEL.length];if(n){bell(n,v*.9,0,B);bell(n,v*.35,.45,B)}}if(ai%32===0)AQCH[Math.floor(ai/32)%4].forEach((f,k)=>pad(f*2,9.6,v*(k?.7:1),k*.08,B));if(Math.random()<.04)bubble(v,B);ai++;return}
 const n=MEL[mi%MEL.length];if(n)tone(n,.28,'triangle',v*.7,0,B);if(mi%4===0)tone([131,110,147,98][Math.floor(mi/8)%4],.5,'triangle',v*.6,0,B);mi++},300);
@@ -333,7 +333,7 @@ function go(s){if(scr==='fishing'&&F&&['wait','hit','play'].includes(F.phase)&&s
 function render(){aqAll=DEV();updTop();cvMode='';mapOpen=false;view.classList.toggle('full',scr==='aqua'||scr==='fishing'||scr==='home'||scr==='spots');({cooler:vCooler,closet:vCloset,home:vHome,spots:vSpots,fishing:vFishing,aqua:vAqua,dex:vDex,shop:vShop,quests:vQuests})[scr]();view.scrollTop=0}
 
 function questRows(){return S.quests.map((q,i)=>{const o=qInfo(q);return`<div class="row"><div><div><span class="tag" style="background:${['#4a9a4a','#d08a10','#c8403a'][i]}">${q.d}</span> ${o.txt}</div><div class="muted">${o.cur}/${o.need}・報酬 ${q.rw}コイン</div></div>${q.got?'<span class="muted">受取済</span>':o.ok?`<button class="wb sm gold" data-act="claim" data-v="${i}">受け取る</button>`:'<span class="muted">未達成</span>'}</div>`}).join('')}
-const DEV=()=>false;const VER='1.0.0';
+const DEV=()=>false;const VER='1.0.1';
 let HOFF=0,homeCv=null;const extC={};
 function vHome(){const inv=S.inv,ready=S.quests.filter(q=>!q.got&&qInfo(q).ok).length;
 view.innerHTML=`<div id="hmBox" style="position:relative;height:100%;overflow:hidden;background:#0c0f18">
