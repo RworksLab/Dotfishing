@@ -249,7 +249,7 @@ let xi=0;const FNCH=[[110,165,220,262],[87,131,175,220],[98,147,196,247],[82,123
 const AQCH=[[131,165,196,247],[110,131,165,196],[87,110,131,165],[98,123,147,165]];let ai=0;
 let mBus=null,mKey='';function bus(k){if(mKey!==k){if(mBus){const g=mBus;g.gain.setTargetAtTime(0,AC.currentTime,.07);setTimeout(()=>{try{g.disconnect()}catch(e){}},1500)}mBus=AC.createGain();mBus.connect(AC.destination);mKey=k}return mBus}
 setInterval(()=>{if(!AC||AC.state!=='running'||!S||S.set.bgm<=0)return;const v=S.set.bgm;const nt=band(S.min)==='夕'||band(S.min)==='夜',mg=cvMode==='mini',B=bus(mg?'mini':scr==='aqua'?'aqua':nt?'night':'day');
-if(mg){const RT=[110,87.3,98,82.4],FR=[null,[523,587,659,698],null,[659,698,740,831]];for(let h=0;h<3;h++){const st=(xi*3+h)%64,c=Math.floor(st/16),p=st%16,w=h*.1;if(p%2===0)tone(p%4?RT[c]*1.5:RT[c],.12,'triangle',v*.7,w,B);if(p%8===0)tone(55,.09,'sine',v*.8,w,B);const f=FR[c];if(f&&p>=12)tone(f[p-12],.09,'square',v*.22,w,B)}xi++;return}
+if(mg){const RT=[110,87.3,98,82.4],FR=[null,[523,587,659,698],null,[659,698,740,831]];for(let h=0;h<3;h++){const st=(xi*3+h)%64,c=Math.floor(st/16),p=st%16,w=h*.1;if(p%2===0){const bf=p%4?RT[c]*1.5:RT[c];tone(bf,.16,'triangle',v,w,B);tone(bf*2,.16,'triangle',v*.55,w,B)}if(p%8===0)tone(80,.09,'sine',v,w,B);const f=FR[c];if(f&&p>=12)tone(f[p-12],.12,'square',v*.42,w,B)}xi++;return}
 if(scr!=='aqua'&&(band(S.min)==='夕'||band(S.min)==='夜')){if(fi%2===0){const n=FNIGHT[(fi/2)%FNIGHT.length];if(n){bell(n,v*.55,0,B);bell(n,v*.2,.5,B)}}if(fi%32===0)FNCH[Math.floor(fi/32)%4].forEach((f,k)=>pad(f*2,9.6,v*(k?.55:.8),k*.1,B));fi++;return}
 if(scr==='aqua'){if(ai%2===0){const n=AQMEL[(ai/2)%AQMEL.length];if(n){bell(n,v*.9,0,B);bell(n,v*.35,.45,B)}}if(ai%32===0)AQCH[Math.floor(ai/32)%4].forEach((f,k)=>pad(f*2,9.6,v*(k?.7:1),k*.08,B));if(Math.random()<.04)bubble(v,B);ai++;return}
 const n=MEL[mi%MEL.length];if(n)tone(n,.28,'triangle',v*.7,0,B);if(mi%4===0)tone([131,110,147,98][Math.floor(mi/8)%4],.5,'triangle',v*.6,0,B);mi++},300);
@@ -333,7 +333,7 @@ function go(s){if(scr==='fishing'&&F&&['wait','hit','play'].includes(F.phase)&&s
 function render(){aqAll=DEV();updTop();cvMode='';mapOpen=false;view.classList.toggle('full',scr==='aqua'||scr==='fishing'||scr==='home'||scr==='spots');({cooler:vCooler,closet:vCloset,home:vHome,spots:vSpots,fishing:vFishing,aqua:vAqua,dex:vDex,shop:vShop,quests:vQuests})[scr]();view.scrollTop=0}
 
 function questRows(){return S.quests.map((q,i)=>{const o=qInfo(q);return`<div class="row"><div><div><span class="tag" style="background:${['#4a9a4a','#d08a10','#c8403a'][i]}">${q.d}</span> ${o.txt}</div><div class="muted">${o.cur}/${o.need}・報酬 ${q.rw}コイン</div></div>${q.got?'<span class="muted">受取済</span>':o.ok?`<button class="wb sm gold" data-act="claim" data-v="${i}">受け取る</button>`:'<span class="muted">未達成</span>'}</div>`}).join('')}
-const DEV=()=>false;const VER='1.0.1';
+const DEV=()=>false;const VER='1.0.2';
 let HOFF=0,homeCv=null;const extC={};
 function vHome(){const inv=S.inv,ready=S.quests.filter(q=>!q.got&&qInfo(q).ok).length;
 view.innerHTML=`<div id="hmBox" style="position:relative;height:100%;overflow:hidden;background:#0c0f18">
@@ -627,7 +627,7 @@ Object.assign(F,{phase:'wait',wt:1+Math.random()*2,band:b,fish:f,size:Math.round
 updTop();fishCtl();gt('待っています…');save()}
 const gt=t=>{const e=$('#gtxt');if(e)e.textContent=t};let fbT;function fb(t){const e=$('#fb');if(!e)return;e.textContent=t;e.classList.add('show');clearTimeout(fbT);fbT=setTimeout(()=>e.classList.remove('show'),600)}
 function tapFish(){if(!F||F.phase!=='play')return;const d=Math.hypot(F.x-CX,F.y-CY),Rr=16*(1+S.eq.reel*0.06);let v,m;
-if(d<=Rr*.3){v=15;m='ど真ん中！'}else if(d<=Rr*.65){v=10;m='ナイス！'}else if(d<=Rr){v=5;m='おしい'}else{v=-5;m='ミス…'}
+if(d<=Rr*.3){v=15;m='PERFECT!'}else if(d<=Rr*.65){v=10;m='GREAT!'}else if(d<=Rr){v=5;m='GOOD!'}else{v=-5;m='MISS...'}
 v=v>0?v*(1-F.def*0.3)+S.eq.reel*0.8:v*(1+F.def*0.5);if(v>0){F.mode='out';F.thr=Math.max(F.thr,.35);F.ang+=1.5+Math.random()*3.2;F.rmax=(24+Math.random()*8)*(1+F.def*.4)*(1-S.eq.rod*.07)}F.g=clamp(F.g+v,0,100);fb(`${m} ${v>0?'+':''}${Math.round(v)}%`);se(v>0?'good':'bad');F.rip=0.4;if(F.g>=100)endFish(true)}
 function fishStep(dt){if(!F)return;const p=F.phase;
 if(p==='wait'){F.wt-=dt;if(F.wt<=0){F.phase='hit';F.ht=1.4;se('hit');fishCtl()}}
@@ -651,8 +651,8 @@ const ns=r>=3?14:special?8:4;for(let i=0;i<ns;i++){const a=i*2.4+t*.8,rr=12+((i*
 conf.forEach(p=>{p.y+=p.v/60;if(p.y>42){p.y=-2;p.x=Math.random()*64}g.fillStyle=p.c;g.fillRect(Math.round(p.x+Math.sin(t*3+p.v)*2),Math.round(p.y),2,1)});
 requestAnimationFrame(step)};step()}
 function hookTap(){if(!F)return;if(F.phase==='hit'){F.phase='play';Object.assign(F,{x:CX,y:CY,r:0,ang:Math.random()*6.28,mode:'dwell',mt:.5,vx:1});se('good');if(scr==='fishing')vMini()}else if(F.phase==='wait')fb('まだ早い…')}
-function missHook(){F.phase='done';fishCtl();se('lose');modal(`<h2>エサだけ取られた…</h2><p>ヒットしたら、すぐに画面をタップしよう。</p><button class="wb big" data-act="close">閉じる</button>`);save()}
-function endFish(ok){F.phase='done';if(cvMode==='mini')vFishing();fishCtl();if(!ok){se('lose');gt('逃げられた');const dm=F.def>.3?'この魚には釣りパワーが大きく足りなかったようだ。ショップで釣り具を強化しよう。':F.def>0?'釣りパワーが少し足りなかったようだ。釣り具を強化すると楽に釣れるはず。':'魚がリングの中心に来たら落ち着いてタップしよう。';modal(`<h2>逃げられた…</h2><p>${dm}</p><button class="wb big" data-act="close">閉じる</button>`);save();return}
+function missHook(){F.phase='done';fishCtl();se('lose');modal(`<h2>エサを取られた…</h2><p>ヒットしたら、すぐに画面をタップしよう。</p><button class="wb big" data-act="close">閉じる</button>`);save()}
+function endFish(ok){F.phase='done';if(cvMode==='mini')vFishing();fishCtl();if(!ok){se('lose');gt('逃げられた…');const dm=F.def>.3?'この魚には釣りパワーが大きく足りなかったようだ。ショップで釣り具を強化しよう。':F.def>0?'釣りパワーが少し足りなかったようだ。釣り具を強化すると楽に釣れるはず。':'魚がリングの中心に来たら落ち着いてタップしよう。';modal(`<h2>逃げられた…</h2><p>${dm}</p><button class="wb big" data-act="close">閉じる</button>`);save();return}
 const f=F.fish,size=F.size,isNew=!S.dex[f.i],prevMax=S.dex[f.i]?S.dex[f.i].max:0,sizeUp=!isNew&&size>prevMax,before=S.quests.filter(q=>qInfo(q).ok).length;const d=S.dex[f.i]||{first:S.day,max:0,n:0};d.n++;if(size>d.max)d.max=size;S.dex[f.i]=d;
 S.today.push({id:f.i,size,spot:SPOTS[f.spot].id,band:F.band});const qn=S.quests.filter(q=>qInfo(q).ok).length>before,pr=priceOf(f,size);F.last={id:f.i,size};catchSE(f.r,sizeUp||isNew);gt('釣れた！');save();if(f.r>=4)flash(f.r);
 const RL=['','','','レア！','スーパーレア！','ウルトラレア！！'][f.r],RC=['','','','#3a7ad0','#8a4ad0','#d89a10'][f.r];
