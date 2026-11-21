@@ -65,6 +65,8 @@ canvas.px{width:100%;image-rendering:pixelated;display:block;border:3px solid va
 #title .wb{width:240px}
 #toast{position:absolute;left:50%;top:64px;transform:translateX(-50%);background:var(--edge);border:3px solid var(--gold);padding:6px 14px;z-index:20;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;font-size:15px}
 #toast.show{opacity:1}
+#upd{position:absolute;left:8px;right:8px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:25;display:none;align-items:center;gap:10px;background:var(--edge);border:3px solid var(--gold);padding:8px 10px;color:#fff3d6}
+#upd.show{display:flex}#upd span{flex:1}
 .tag{display:inline-block;background:#d84a3a;color:#fff;font-size:13px;padding:0 6px}
 .mk{font-size:18px;width:1.4em;text-align:center}
 .opt{display:flex;align-items:center;gap:6px;padding:4px 0}
@@ -100,6 +102,7 @@ dt{color:#7a5a3a}dd{margin:0}
 </nav>
 <div id="modal"><div class="panel" id="mbox"></div></div>
 <div id="toast"></div>
+<div id="upd" role="status"><span>更新があります。</span><button class="wb sm" data-act="update">更新</button></div>
 <div id="title" style="display:none"><canvas id="tcv" width="64" height="40"></canvas></div>
 </div>
 <script>
@@ -879,6 +882,7 @@ $('#sBgm').oninput=e=>{S.set.bgm=+e.target.value;save()};$('#sSe').oninput=e=>{S
 function useData(d,msg){if(!d||!d.v||!d.day){toast('データを読み込めませんでした');return}S=Object.assign(fresh(),d);cleanDev();closeModal();$('#title').style.display='none';scr='home';F=null;render();toast(msg)}
 const A={
 go:v=>go(v),settings,close:closeModal,
+update:()=>{try{save()}catch(e){}location.replace(location.pathname+'?v='+(updVer||Date.now()))},
 claim:i=>{const q=S.quests[i];if(q.got||!qInfo(q).ok)return;q.got=1;S.coins+=q.rw;se('coin');toast(`${q.rw}コインを受け取った`);save();render()},
 sleep:()=>modal(`<h2>${ico('moon',1)}いつまで寝る？</h2><p class="muted">今は ${fmt(S.min)}。翌日まで寝ると日付が進み、依頼が新しくなります。</p>${WAKE.map((w,i)=>`<button class="wb big" style="margin-bottom:8px" data-act="sleepto" data-v="${i}">${w[0]}（${wakeToday(w[1])?'今日':'明日'} ${fmt(w[1])}）</button>`).join('')}<button class="wb big" data-act="close">やめる</button>`),
 sleepto:i=>sleepTo(+i),sellall:sellAll,
@@ -917,6 +921,13 @@ document.addEventListener('pointerdown',e=>{if(cvMode==='fish'&&e.target.closest
 if(e.target.id==='cv'){if(cvMode==='mini'){e.preventDefault();tapFish()}else if(cvMode==='aq')aqTap(e);else if(cvMode==='island')islTap(e)}});
 
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal'&&!$('#mbox').querySelector('[data-act=sellnow]'))closeModal()});
+
+/* ---------- 更新チェック ---------- */
+const verNum=v=>String(v).split('.').map(n=>+n||0);
+const newer=(a,b)=>{const A=verNum(a),B=verNum(b);for(let i=0;i<3;i++){if((A[i]||0)!==(B[i]||0))return(A[i]||0)>(B[i]||0)}return false};
+let updVer=null;
+async function checkUpdate(){try{const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const j=await r.json();if(j&&j.version&&newer(j.version,VER)){updVer=j.version;$('#upd span').textContent=`更新があります。（ver ${j.version}）`;$('#upd').classList.add('show')}}catch(e){}}
+checkUpdate();setInterval(checkUpdate,30*60*1000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkUpdate()});
 function cleanDev(){if(S.dev){delete S.dev;for(const k in S.eq)if(!S.own[k].includes(S.eq[k]))S.eq[k]=Math.max(...S.own[k])}}
 {const d=loadLocal();$('#title').style.display='none';if(d){S=Object.assign(fresh(),d);cleanDev();scr='home';render()}else{S=fresh();S.firstLook=1;save();scr='closet';render();toast('まずは自分の姿を決めよう')}}
 document.addEventListener('pointerdown',()=>ac(),{once:true});
