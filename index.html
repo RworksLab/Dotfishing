@@ -246,20 +246,20 @@ let xi=0;const FNCH=[[110,165,220,262],[87,131,175,220],[98,147,196,247],[82,123
 const AQCH=[[131,165,196,247],[110,131,165,196],[87,110,131,165],[98,123,147,165]];let ai=0;
 let mBus=null,mKey='';function bus(k){if(mKey!==k){if(mBus){const g=mBus;g.gain.setTargetAtTime(0,AC.currentTime,.07);setTimeout(()=>{try{g.disconnect()}catch(e){}},1500)}mBus=AC.createGain();mBus.connect(AC.destination);mKey=k}return mBus}
 setInterval(()=>{if(!AC||AC.state!=='running'||!S||S.set.bgm<=0)return;const v=S.set.bgm;const nt=band(S.min)==='夕'||band(S.min)==='夜',mg=cvMode==='mini',B=bus(mg?'mini':scr==='aqua'?'aqua':nt?'night':'day');
-if(mg){const BS=[131,196,131,196,175,262,175,262,196,294,196,294,131,196,165,196],LD=[523,659,784,659,880,784,659,784,587,659,784,880,1047,880,784,659];for(let h=0;h<2;h++){const st=(xi*2+h)%16,w=h*.15;tone(BS[st],.12,'square',v*.55,w,B);if(LD[st]&&st%2===0)tone(LD[st],.14,'triangle',v*.6,w,B);tone(7000,.02,'square',v*(h?.06:.1),w,B)}xi++;return}
+if(mg){const RT=[110,87.3,98,82.4],AR=[[440,523,659],[349,440,523],[392,494,587],[330,415,494]],PT=[0,-1,1,-1,2,-1,1,2,0,-1,1,-1,2,1,2,-1],RISE=[659,698,740,831];for(let h=0;h<3;h++){const st=(xi*3+h)%64,c=Math.floor(st/16),p=st%16,w=h*.1;tone(p%2?RT[c]*2:RT[c],.09,'square',v*.42,w,B);if(p%4===0)tone(55,.09,'sine',v*.9,w,B);if(p%2)tone(8000,.015,'square',v*.07,w,B);const n=c===3&&p>=12?RISE[p-12]:PT[p]>=0?AR[c][PT[p]]:0;if(n)tone(n,.07,'square',v*.28,w,B);if(p===0)tone(AR[c][0]/2,.25,'triangle',v*.35,w,B)}xi++;return}
 if(scr!=='aqua'&&(band(S.min)==='夕'||band(S.min)==='夜')){if(fi%2===0){const n=FNIGHT[(fi/2)%FNIGHT.length];if(n){bell(n,v*.55,0,B);bell(n,v*.2,.5,B)}}if(fi%32===0)FNCH[Math.floor(fi/32)%4].forEach((f,k)=>pad(f*2,9.6,v*(k?.55:.8),k*.1,B));fi++;return}
 if(scr==='aqua'){if(ai%2===0){const n=AQMEL[(ai/2)%AQMEL.length];if(n){bell(n,v*.9,0,B);bell(n,v*.35,.45,B)}}if(ai%32===0)AQCH[Math.floor(ai/32)%4].forEach((f,k)=>pad(f*2,9.6,v*(k?.7:1),k*.08,B));if(Math.random()<.04)bubble(v,B);ai++;return}
 const n=MEL[mi%MEL.length];if(n)tone(n,.28,'triangle',v*.7,0,B);if(mi%4===0)tone([131,110,147,98][Math.floor(mi/8)%4],.5,'triangle',v*.6,0,B);mi++},300);
 
 /* ---------- ドット素材 ---------- */
-const IPAL={k:'#2a1a10',R:'#d84a3a',W:'#fff3d6',B:'#8a5a30',G:'#6ab0e0',l:'#d8d8d8',K:'#3a2a1a',A:'#4aa0d8',O:'#ff7a1a',S:'#f2d79b',Y:'#ffcf4a',C:'#c88a10',V:'#4aa04a',D:'#2e7a34'};
+const IPAL={k:'#2a1a10',R:'#d84a3a',W:'#fff3d6',B:'#8a5a30',G:'#6ab0e0',l:'#d8d8d8',K:'#3a2a1a',A:'#4aa0d8',O:'#ff7a1a',S:'#f2d79b',Y:'#ffcf4a',C:'#c88a10',V:'#4aa04a',D:'#2e7a34',L:'#9a9aa4',g:'#b8b8c0'};
 const ICONS={
 home:['....kk....','...kRRk...','..kRRRRk..','.kRRRRRRk.','kkkkkkkkkk','.kWWWWWWk.','.kWBBWGWk.','.kWBBWGWk.','.kWBBWWWk.','.kkkkkkkk.'],
 rod:['........B.','.......B.l','......B..l','.....B...l','....B....l','...B.....l','..B......R','.B.......W','KB........','K.........'],
 tank:['kkkkkkkkkk','kGGGGGGGGk','kAAAAAAAAk','kAAOOWAAAk','kAOOOWOAVk','kAAOOWAAVk','kAAAAAAVAk','kSSSSSSSSk','kkkkkkkkkk','.kB....Bk.'],
 book:['.kkkkkkkk.','kVVVVVVVWk','kVYYYYVVWk','kVVVVVVVWk','kVYYYVVVWk','kVVVVVVVWk','kVVVVVVVWk','kDVVVVVVWk','kkkkkkkkkk','..........'],
 bag:['...kkkk...','..k....k..','.kkkkkkkk.','kBBBBBBBBk','kBBkkkkBBk','kBkYYYYkBk','kBkYCCYkBk','kBkYYYYkBk','kBBkkkkBBk','.kkkkkkkk.'],
-gear:['...kkkk...','.kklllkk..','.klllllk..','klllkklllk','kllk..kllk','kllk..kllk','klllkklllk','.klllllk..','.kklllkk..','...kkkk...'],
+gear:['...kkkk...','.kkkWlkkk.','.kWlllllk.','kkllkkllkk','kWlk..kgLk','klgk..kgLk','kkllkkgLkk','.klllgLLk.','.kkkgLkkk.','...kkkk...'],
 coin:['..kkkk..','.kYYYYk.','kYYWYYYk','kYWYCYYk','kYYYCYYk','kYYYCYCk','.kYCCCk.','..kkkk..'],
 map:['kkkkkkkkkk','kWWkSSkWWk','kWRkSSkWWk','kWWkSSkWVk','kWWkSRkWVk','kWWkSSkWWk','kWWkSSkWWk','kkkkkkkkkk'],
 hanger:['...kk...','..k..k..','.....k..','....k...','...kk...','..kWWk..','.kWWWWk.','kkkkkkkk'],
@@ -330,7 +330,7 @@ function go(s){if(scr==='fishing'&&F&&['wait','hit','play'].includes(F.phase)&&s
 function render(){aqAll=DEV();updTop();cvMode='';mapOpen=false;view.classList.toggle('full',scr==='aqua'||scr==='fishing'||scr==='home'||scr==='spots');({cooler:vCooler,closet:vCloset,home:vHome,spots:vSpots,fishing:vFishing,aqua:vAqua,dex:vDex,shop:vShop,quests:vQuests})[scr]();view.scrollTop=0}
 
 function questRows(){return S.quests.map((q,i)=>{const o=qInfo(q);return`<div class="row"><div><div><span class="tag" style="background:${['#4a9a4a','#d08a10','#c8403a'][i]}">${q.d}</span> ${o.txt}</div><div class="muted">${o.cur}/${o.need}・報酬 ${q.rw}コイン</div></div>${q.got?'<span class="muted">受取済</span>':o.ok?`<button class="wb sm gold" data-act="claim" data-v="${i}">受け取る</button>`:'<span class="muted">未達成</span>'}</div>`}).join('')}
-const DEV=()=>!!(S&&S.dev);
+const DEV=()=>false;const VER='1.0.0';
 let HOFF=0,homeCv=null;const extC={};
 function vHome(){const inv=S.inv,ready=S.quests.filter(q=>!q.got&&qInfo(q).ok).length;
 view.innerHTML=`<div id="hmBox" style="position:relative;height:100%;overflow:hidden;background:#0c0f18">
@@ -874,10 +874,9 @@ const wakeToday=m=>S.min<m;
 function sleepTo(i){const m=WAKE[i][1];if(wakeToday(m)){S.min=m}else{S.day++;S.min=m;S.today=[];S.quests=genQuests(S.day,S.unl,m)}save();closeModal();scr='home';render();toast(`${S.day}日目 ${fmt(m)} に起きた`)}
 function settings(){modal(`<h2>${ico('gear',1)}設定</h2><label>BGM音量<input type="range" id="sBgm" min="0" max="1" step="0.1" value="${S.set.bgm}"></label><label>効果音音量<input type="range" id="sSe" min="0" max="1" step="0.1" value="${S.set.se}"></label><label>環境音（釣り場）<input type="range" id="sAmb" min="0" max="1" step="0.1" value="${S.set.amb??.7}"></label>
 <div class="btns" style="margin:10px 0"><button class="wb" data-act="save">データ保存</button><button class="wb" data-act="load">データ読み込み</button><button class="wb" data-act="copycode">セーブコードをコピー</button><button class="wb" data-act="reset">最初からやり直す</button></div>
-<div style="border:2px dashed #b08a5a;padding:8px;margin:0 0 10px"><p style="margin:0 0 6px">開発用</p><button class="wb big${DEV()?' on':''}" data-act="dev">全開放モード：${DEV()?'オン':'オフ'}</button>${DEV()?'<div class="btns" style="margin:6px 0 0"><button class="wb sm" data-act="devcoin">＋10,000コイン</button><button class="wb sm" data-act="devtime">時間を＋1時間</button></div>':''}<p class="muted" style="margin:6px 0 0">オンの間は全釣り場・全釣り具・全50種の魚（図鑑と水族館）が開放されます。オフにすると元のデータに戻ります。</p></div>
-<p class="muted">別の端末に移すときは、セーブコードを貼り付けて読み込みます。</p><textarea id="code" placeholder="セーブコードを貼り付け"></textarea><button class="wb big" data-act="loadcode" style="margin:8px 0">コードから読み込む</button><button class="wb big" data-act="close">閉じる</button>`);
+<p class="muted">別の端末に移すときは、セーブコードを貼り付けて読み込みます。</p><textarea id="code" placeholder="セーブコードを貼り付け"></textarea><button class="wb big" data-act="loadcode" style="margin:8px 0">コードから読み込む</button><button class="wb big" data-act="close">閉じる</button><p class="muted" style="text-align:center;margin:8px 0 0">ドット釣り日和 ver ${VER}</p>`);
 $('#sBgm').oninput=e=>{S.set.bgm=+e.target.value;save()};$('#sSe').oninput=e=>{S.set.se=+e.target.value;se('tap');save()};$('#sAmb').oninput=e=>{S.set.amb=+e.target.value;save()}}
-function useData(d,msg){if(!d||!d.v||!d.day){toast('データを読み込めませんでした');return}S=Object.assign(fresh(),d);closeModal();$('#title').style.display='none';scr='home';F=null;render();toast(msg)}
+function useData(d,msg){if(!d||!d.v||!d.day){toast('データを読み込めませんでした');return}S=Object.assign(fresh(),d);cleanDev();closeModal();$('#title').style.display='none';scr='home';F=null;render();toast(msg)}
 const A={
 go:v=>go(v),settings,close:closeModal,
 claim:i=>{const q=S.quests[i];if(q.got||!qInfo(q).ok)return;q.got=1;S.coins+=q.rw;se('coin');toast(`${q.rw}コインを受け取った`);save();render()},
@@ -901,7 +900,7 @@ fishgo:()=>{if(scr==='fishing'&&F)return;const i=(S.unl[SPOTS[S.lastSpot||0].id]
 cont:()=>{ac();const d=loadLocal();if(d)useData(d,'おかえりなさい');else toast('保存データがありません')},
 newgame:()=>{ac();closeModal();S=fresh();S.firstLook=1;F=null;save();$('#title').style.display='none';scr='closet';render();toast('まずは自分の姿を決めよう')},
 closet:()=>go('closet'),
-dev:()=>{S.dev=!S.dev;if(!S.dev)for(const k in S.eq)if(!S.own[k].includes(S.eq[k]))S.eq[k]=Math.max(...S.own[k]);save();render();settings();toast(S.dev?'全開放モード：オン':'全開放モード：オフ')},devcoin:()=>{S.coins+=10000;save();updTop();toast('10,000コインを追加した')},devtime:()=>{S.min=Math.min(MAXMIN-30,S.min+60);save();render();settings()},
+
 sellone:i=>{const c=S.inv[+i];if(!c)return;const v=priceOf(FISH[c.id],c.size);S.coins+=v;S.inv.splice(+i,1);se('coin');toast(`${FISH[c.id].name}を${v}コインで売った`);save();render()},
 aqmap:()=>aqMapOpen(),aqmapclose:()=>{mapOpen=false;const m=$('#aqMap');if(m)m.style.display='none'},aqgo:v=>{mapOpen=false;$('#aqMap').style.display='none';aqEnter(+v)},
 pq:v=>{if(!aqPQ)return;const n=aqPQ.ids.length;plaque(aqPQ.ids,(aqPQ.i+ +v+n)%n)},aqside:v=>{aqChar.tx=+v<0?4:AW-4;aqChar.ty=clamp(aqChar.y,AWY+14,AH-4)},
@@ -918,7 +917,8 @@ document.addEventListener('pointerdown',e=>{if(cvMode==='fish'&&e.target.closest
 if(e.target.id==='cv'){if(cvMode==='mini'){e.preventDefault();tapFish()}else if(cvMode==='aq')aqTap(e);else if(cvMode==='island')islTap(e)}});
 
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal'&&!$('#mbox').querySelector('[data-act=sellnow]'))closeModal()});
-{const d=loadLocal();$('#title').style.display='none';if(d){S=Object.assign(fresh(),d);scr='home';render()}else{S=fresh();S.firstLook=1;save();scr='closet';render();toast('まずは自分の姿を決めよう')}}
+function cleanDev(){if(S.dev){delete S.dev;for(const k in S.eq)if(!S.own[k].includes(S.eq[k]))S.eq[k]=Math.max(...S.own[k])}}
+{const d=loadLocal();$('#title').style.display='none';if(d){S=Object.assign(fresh(),d);cleanDev();scr='home';render()}else{S=fresh();S.firstLook=1;save();scr='closet';render();toast('まずは自分の姿を決めよう')}}
 document.addEventListener('pointerdown',()=>ac(),{once:true});
 }
 </script>
