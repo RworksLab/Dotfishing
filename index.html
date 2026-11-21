@@ -3,7 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>ドット釣り日和（水辺キャンプ版）</title>
+<title>ドット釣り日和</title>
+<meta name="description" content="水辺でのんびり釣りをして、魚を集めて水族館に飾ろう。ドット絵で描かれた5つの釣り場、50種類の魚、着せ替えや依頼も楽しめる釣り＆コレクションゲーム。">
+<meta property="og:title" content="ドット釣り日和">
+<meta property="og:description" content="水辺でのんびり釣りをして、魚を集めて水族館に飾ろう。ドット絵で描かれた5つの釣り場、50種類の魚、着せ替えや依頼も楽しめる釣り＆コレクションゲーム。">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://rworkslab.github.io/Dotfishing/icon/icon-512.png">
+<meta name="twitter:card" content="summary">
+<meta name="apple-mobile-web-app-title" content="ドット釣り日和">
 <link rel="icon" type="image/png" sizes="32x32" href="icon/icon-32.png">
 <link rel="apple-touch-icon" href="icon/icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -333,7 +340,7 @@ function go(s){if(scr==='fishing'&&F&&['wait','hit','play'].includes(F.phase)&&s
 function render(){aqAll=DEV();updTop();cvMode='';mapOpen=false;view.classList.toggle('full',scr==='aqua'||scr==='fishing'||scr==='home'||scr==='spots');({cooler:vCooler,closet:vCloset,home:vHome,spots:vSpots,fishing:vFishing,aqua:vAqua,dex:vDex,shop:vShop,quests:vQuests})[scr]();view.scrollTop=0}
 
 function questRows(){return S.quests.map((q,i)=>{const o=qInfo(q);return`<div class="row"><div><div><span class="tag" style="background:${['#4a9a4a','#d08a10','#c8403a'][i]}">${q.d}</span> ${o.txt}</div><div class="muted">${o.cur}/${o.need}・報酬 ${q.rw}コイン</div></div>${q.got?'<span class="muted">受取済</span>':o.ok?`<button class="wb sm gold" data-act="claim" data-v="${i}">受け取る</button>`:'<span class="muted">未達成</span>'}</div>`}).join('')}
-const DEV=()=>false;const VER='1.0.2';
+const DEV=()=>false;const VER='1.0.3';
 let HOFF=0,homeCv=null;const extC={};
 function vHome(){const inv=S.inv,ready=S.quests.filter(q=>!q.got&&qInfo(q).ok).length;
 view.innerHTML=`<div id="hmBox" style="position:relative;height:100%;overflow:hidden;background:#0c0f18">
