@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ドット釣り日和（水辺キャンプ版）</title>
+<link rel="icon" type="image/png" sizes="32x32" href="icon/icon-32.png">
+<link rel="apple-touch-icon" href="icon/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+/* VOICE: 温かい、のんびりした、昔の携帯ゲーム
+   IDEA: 木の看板と古い携帯ゲーム機の画面
+   PICTURE: ドット絵の部屋・水槽・水面がそのまま画面
+   COLOUR and TYPE: こげ茶の木、クリーム色の文字、水色の水 / DotGothic16
+   LAYOUT: 縦画面一列、上に日付とコイン、下に木の看板メニュー5つ */
+:root{color-scheme:dark;--bg:#24170e;--ink:#fff3d6;--wood:#9a6034;--wood2:#7a4824;--woodl:#c58a52;--edge:#3b2414;--deep:#20130a;--paper:#f6e6c4;--pink:#3b2414;--gold:#ffcf4a}
+*{box-sizing:border-box;min-width:0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:16px/1.5 'DotGothic16',ui-monospace,monospace;overflow:hidden;-webkit-tap-highlight-color:transparent}
+#app{max-width:440px;margin:0 auto;height:100dvh;display:flex;flex-direction:column;background:#5a3a22 repeating-linear-gradient(0deg,transparent 0 11px,rgba(0,0,0,.08) 11px 12px);position:relative;overflow:hidden;padding-top:env(safe-area-inset-top)}
+header{display:flex;align-items:center;gap:6px;padding:8px;background:var(--wood2);border-bottom:3px solid var(--edge)}
+.pill{background:var(--edge);border:2px solid var(--deep);padding:3px 7px;font-size:14px;display:flex;gap:5px;align-items:center;white-space:nowrap}
+.pill.grow{flex:1;justify-content:flex-start}
+main{flex:1;overflow-y:auto;padding:10px 10px 16px}
+main.full{padding:0;overflow:hidden}
+nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;padding:6px 6px calc(6px + env(safe-area-inset-bottom));background:var(--edge)}
+.wb{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation;font:inherit;font-size:15px;color:var(--ink);background:var(--wood) repeating-linear-gradient(0deg,transparent 0 5px,rgba(0,0,0,.13) 5px 6px,transparent 6px 9px,rgba(255,255,255,.05) 9px 10px);border:3px solid var(--edge);border-radius:0;box-shadow:inset 0 2px 0 var(--woodl),inset 0 -2px 0 var(--wood2),0 4px 0 var(--deep);padding:8px 12px;min-height:44px;cursor:pointer;text-shadow:1px 1px 0 var(--edge);display:inline-flex;align-items:center;justify-content:center;gap:6px;position:relative;top:0}
+.wb:active{top:3px;box-shadow:inset 0 2px 0 var(--woodl),inset 0 -2px 0 var(--wood2),0 1px 0 var(--deep)}
+.wb.on{background-color:#c98a4e;color:#fff;box-shadow:inset 0 2px 0 #f0b87a,inset 0 -2px 0 var(--wood),0 4px 0 var(--deep)}
+.wb:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.wb.big{width:100%;font-size:18px;min-height:52px}
+.btns .wb.big{font-size:16px;padding:8px 4px;gap:4px;white-space:nowrap}
+.wb.sm{font-size:14px;min-height:36px;padding:4px 8px}
+.wb.gold{background-color:#c8901c;color:#fff}
+nav .wb{flex-direction:column;gap:1px;font-size:13px;padding:4px 0;min-height:54px}
+.ico{width:24px;height:24px;image-rendering:pixelated;flex:none}
+.ico.s{width:16px;height:16px}
+.panel{background:var(--paper);color:var(--edge);border:3px solid var(--edge);box-shadow:inset 0 0 0 2px #e2c99a,0 4px 0 var(--deep);padding:10px 12px;margin-bottom:12px}
+.panel h2{margin:0 0 6px;font-size:18px;font-weight:400;display:flex;align-items:center;gap:6px}
+.panel p{margin:4px 0}
+.muted{color:#7a5a3a;font-size:14px}
+canvas.px{width:100%;image-rendering:pixelated;display:block;border:3px solid var(--edge);box-shadow:0 4px 0 var(--deep);margin-bottom:12px;background:#1c2850;touch-action:manipulation}
+.btns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.cell{background:#efdcb4;border:2px solid #b08a5a;color:var(--edge);font:inherit;font-size:13px;padding:4px 2px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.2;min-height:80px}
+.cell.no{background:#d9c49a;color:#8a6a4a}
+.sprite{width:64px;height:40px;image-rendering:pixelated}
+.sprite.l{width:192px;height:120px}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:2px dashed #d2b482}
+.row:last-child{border-bottom:0}
+.star{color:#d08a00;letter-spacing:-2px;white-space:nowrap}
+.gauge{height:24px;background:var(--deep);border:3px solid var(--edge);position:relative;margin-bottom:8px}
+.gauge i{position:absolute;left:0;top:0;bottom:0;background:#6fd04a;box-shadow:inset 0 3px 0 #a8f07a}
+.gauge b{position:absolute;inset:0;text-align:center;font-weight:400;font-size:14px;line-height:18px;text-shadow:1px 1px 0 #000}
+.stage{position:relative}
+#fb{position:absolute;left:0;right:0;top:38%;text-align:center;font-size:24px;color:#fff;text-shadow:2px 2px 0 var(--edge);pointer-events:none;opacity:0;transition:opacity .2s}
+#fb.show{opacity:1}
+#modal{position:absolute;inset:0;background:rgba(20,10,4,.65);display:none;align-items:center;justify-content:center;padding:16px;z-index:5}
+#modal.show{display:flex}
+#modal .panel{width:100%;max-height:88%;overflow:auto;margin:0}
+#title{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;background:#1c2850}
+#title h1{font-size:40px;font-weight:400;margin:0;line-height:1.05;text-shadow:3px 3px 0 var(--edge);text-align:center;color:var(--gold)}
+#title .wb{width:240px}
+#toast{position:absolute;left:50%;top:64px;transform:translateX(-50%);background:var(--edge);border:3px solid var(--gold);padding:6px 14px;z-index:20;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;font-size:15px}
+#toast.show{opacity:1}
+.tag{display:inline-block;background:#d84a3a;color:#fff;font-size:13px;padding:0 6px}
+.mk{font-size:18px;width:1.4em;text-align:center}
+.opt{display:flex;align-items:center;gap:6px;padding:4px 0}
+.opt>span{width:5.5em;flex:none;font-size:14px;color:#7a5a3a}
+.opt b{flex:1;text-align:center;font-weight:400}
+.sw{display:flex;gap:4px;flex-wrap:wrap;flex:1}
+.sw button{width:32px;height:32px;border:3px solid #3b2414;cursor:pointer;padding:0;box-shadow:inset 0 3px 0 rgba(255,255,255,.3),inset 0 -3px 0 rgba(0,0,0,.2)}
+.sw button.on{outline:3px solid #ffcf4a;outline-offset:1px}
+input[type=range]{width:100%;accent-color:#9a6034;height:28px}
+textarea{width:100%;font:inherit;font-size:16px;min-height:70px;background:#fffaf0;color:var(--edge);border:2px solid var(--edge)}
+dl{display:grid;grid-template-columns:6.5em minmax(0,1fr);gap:4px 8px;margin:8px 0;font-size:15px}
+dt{color:#7a5a3a}dd{margin:0}
+.note{font-size:13px;color:#d8c0a0;text-align:center;margin:6px 0 0}
+@keyframes pop{0%{transform:scale(0)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
+.pop{animation:pop .5s cubic-bezier(.2,.9,.3,1.3) both}.pop.d1{animation-delay:.15s}.pop.d2{animation-delay:.3s}
+@media (prefers-reduced-motion:reduce){.pop{animation:none}#fb,#toast{transition:none}}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+<span class="pill grow" id="hDate"></span>
+<span class="pill" id="hCoin"></span>
+<button class="wb sm" data-act="settings" aria-label="設定"><img class="ico s" data-ico="gear" alt=""></button>
+</header>
+<main id="view"></main>
+<nav>
+<button class="wb" data-act="go" data-v="home"><img class="ico" data-ico="home" alt="">ホーム</button>
+<button class="wb" data-act="fishgo" data-v="spots"><img class="ico" data-ico="rod" alt="">釣り</button>
+<button class="wb" data-act="go" data-v="aqua"><img class="ico" data-ico="tank" alt="">水族館</button>
+<button class="wb" data-act="go" data-v="dex"><img class="ico" data-ico="book" alt="">図鑑</button>
+<button class="wb" data-act="go" data-v="shop"><img class="ico" data-ico="bag" alt="">ショップ</button>
+</nav>
+<div id="modal"><div class="panel" id="mbox"></div></div>
+<div id="toast"></div>
+<div id="title" style="display:none"><canvas id="tcv" width="64" height="40"></canvas></div>
+</div>
+<script>
+{
+const $=s=>document.querySelector(s);
+const mkc=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c};
+const P=(g,x,y,c)=>{g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),1,1)};
+const R=(g,x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),w,h)};
+const rng=s=>()=>(s=(s*16807)%2147483647)/2147483647;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const stars=n=>'★'.repeat(n);
+
+/* ---------- データ ---------- */
+const SPOTS=[
+{id:'pond',name:'小さな池',cost:0,rec:10,desc:'身近な淡水魚が中心',water:['#a8e0b8','#78c49c','#58a884','#428c6e'],ground:['#7a6a48','#5a4a30','#9a8a60']},
+{id:'river',name:'森の川',cost:800,rec:30,desc:'川に住む魚が中心',water:['#b0e4f0','#7cc8de','#52a8c8','#3a8cb0'],ground:['#8a8a80','#6a6a62','#aaa89c']},
+{id:'stream',name:'清流',cost:2600,rec:50,desc:'透明度の高い水辺の魚',water:['#e0f8ff','#b0ecf8','#84d8ec','#60c2dc'],ground:['#c8c0a8','#a8a088','#e8e0c8']},
+{id:'lake',name:'大きな湖',cost:6500,rec:75,desc:'大型魚や珍しい淡水魚',water:['#96c8ee','#62a0da','#4280c2','#2e64a4'],ground:['#6a5a48','#4a3e30','#8a7a64']},
+{id:'coast',name:'海岸',cost:15000,rec:105,desc:'海水魚が中心',water:['#b0eef8','#62cce8','#309ed2','#1e78b2'],ground:['#f2d79b','#d9b877','#fff0c4']},
+{id:'harbor',name:'港',cost:32000,rec:125,desc:'漁船が集まる港の大型海水魚',water:['#8acac8','#5a9cac','#3a7a8e','#26586c'],ground:['#8a8a86','#6a6a66','#aaa8a0'],soon:true},
+{id:'offshore',name:'沖合',cost:65000,rec:150,desc:'外洋を回遊する巨大魚',water:['#5a9ad8','#2e6cb4','#1a4c8e','#0e306a'],ground:['#3a4a6a','#2a3a5a','#4a5a7a'],soon:true}];
+const OPEN=s=>!s.soon;
+const FD=`コイ|1|朝昼|10|30|70|n|#8a7a4a|#d8c89a|#6a5a30||池の主ともいわれる丈夫な魚。口に2対のひげがある。
+フナ|1|朝夕|10|10|30|n|#9a8a5a|#d0c8a0|#7a6a3a||身近な池や沼にすむ。釣りの入門にぴったり。
+メダカ|1|朝昼|5|2|4|l|#c8b070|#f0e6c0|#a89050||水面近くを群れで泳ぐ、小さくてかわいい魚。
+ドジョウ|2|夕夜|15|8|18|e|#8a7048|#c8b088|#5a4828|d|泥にもぐるのが得意。口のひげで餌を探す。
+タナゴ|2|朝昼|15|4|9|r|#9ab0c0|#e8d8e8|#d06a8a|s|繁殖期のオスは美しい婚姻色に染まる。
+ナマズ|3|夜|25|30|70|c|#4a4a3a|#a8a088|#2a2a20|m|夜になると動き出す。長いひげが自慢。
+ライギョ|3|夕夜|30|40|80|l|#5a6a3a|#b8b890|#2a3020|m|力強い引きで知られる肉食魚。
+ニシキゴイ|4|昼|40|40|80|n|#ffffff|#fff8f0|#e04a2a|m|紅白の模様が美しい、泳ぐ宝石。
+星屑フィッシュ|4|夜|45|10|25|n|#2a3a7a|#4a5aa8|#fff6a0|g|夜空の星を集めたようにきらめく不思議な魚。
+黄金のコイ|5|朝|55|50|90|n|#ffc832|#fff0a0|#e09a10|g|朝日を浴びて金色に輝く、伝説のコイ。
+オイカワ|1|朝昼|20|8|15|n|#7a9ab0|#e8e8e0|#e07a6a|b|川の中流でよく見かける。オスは虹色に輝く。
+カワムツ|1|朝夕|20|8|16|n|#6a7a5a|#e0dcc8|#2a3a5a|s|体の横に黒っぽい太い帯がある。
+ウグイ|2|朝昼|25|15|35|n|#5a6a7a|#e0e0d8|#d05a4a|s|川から海まで広くすむ。赤い線が出ることも。
+カジカ|2|夕夜|30|8|15|c|#7a6a50|#c8b890|#4a3a28|m|石の下にひそむ、頭の大きな魚。
+ヤマメ|2|朝|35|15|30|n|#7a8a6a|#f0e8e0|#4a5a6a|p|渓流の女王。体に楕円の模様が並ぶ。
+イワナ|3|朝夕|40|20|45|n|#5a5a4a|#e8d8b0|#f0e8c0|d|いちばん上流にすむ渓流魚。白い斑点がある。
+アマゴ|3|昼|40|15|30|n|#8a8a6a|#f0e8e0|#e05a3a|p|ヤマメに似ているが、朱色の点がある。
+ニジマス|4|昼|50|30|60|n|#6a8a6a|#f0e0e0|#e07a9a|s|体の横に虹色の帯が走る。
+木漏れ日フィッシュ|4|朝|55|15|35|n|#8ac06a|#f0f0a0|#fff6c0|g|木漏れ日のようなまだら模様を持つ。
+しましまヤマメ|5|夜|65|25|45|n|#4a5a7a|#e8e8f0|#1a2030|b|夜の渓流にだけ現れる、しま模様のヤマメ。
+アユ|1|朝昼|35|15|30|n|#8a9a7a|#f0f0e0|#f0d050|s|香りが良く「香魚」とも呼ばれる。
+ハヤ|1|朝夕|35|10|25|n|#7a8a9a|#e8e8e8|#4a5a6a||清流で群れる元気な小魚。
+カワヨシノボリ|2|昼|40|4|8|l|#8a7a5a|#d8c8a0|#4a3a2a|m|腹びれの吸盤で石にくっつく。
+ハリヨ|2|朝|45|3|6|r|#6a7a5a|#c8d0b0|#e05a4a||背中にトゲを持つ小魚。湧き水を好む。
+アブラハヤ|2|夕|40|8|14|n|#8a7a5a|#d8d0b0|#4a4a3a|s|ぬめりで油を塗ったように見える。
+サクラマス|3|朝昼|55|40|70|n|#6a7a8a|#f0d8d8|#e08aa0|b|海から川へ戻るヤマメ。桜色に染まる。
+ブラウントラウト|3|夕|55|30|70|n|#8a6a3a|#f0d8a0|#3a2010|d|ヨーロッパ生まれのマス。黒い斑点が目立つ。
+水晶ウオ|4|夜|65|10|25|n|#c0e8f0|#f0ffff|#ffffff|g|透き通った体を持ち、月明かりで光る。
+しずくクラゲウオ|4|夜|70|8|18|j|#a0d8f0|#e0f8ff|#ffffff||水のしずくのように、ふわふわ漂う魚。
+リボンフィッシュ|5|朝|85|30|60|e|#f08ab0|#ffd8e8|#ffffff|b|リボンのような長いひれをなびかせる。
+ワカサギ|1|朝昼|45|6|12|l|#a0b0c0|#f0f0f0|#6a8aa0|s|湖で群れる小魚。氷の上での釣りでも人気。
+ブルーギル|1|昼|45|10|25|r|#5a7a6a|#e0c890|#2a3a5a|b|えらぶたに青黒い点がある丸い魚。
+ブラックバス|2|朝夕|55|25|55|n|#5a7a3a|#e0e0c0|#2a3a1a|s|大きな口で小魚を狙う、人気の釣り魚。
+ヘラブナ|2|昼|55|25|45|r|#9a9a7a|#e0e0c8|#6a6a4a||体高の高いフナ。繊細なアタリが魅力。
+ラージマウスバス|2|夕|60|30|60|n|#4a6a3a|#d8e0b0|#1a2a10|m|口がとても大きく、よく育ったバス。
+ソウギョ|3|昼|70|60|120|n|#7a8a6a|#d8d8c0|#5a6a4a||水草を食べる大型魚。1mを超えることも。
+チョウザメ|3|夜|80|60|150|l|#6a7a8a|#d0d8e0|#3a4a5a|d|背中に硬いうろこが並ぶ古代魚。
+巨大オオナマズ|4|夜|90|80|160|c|#3a3a2a|#9a9078|#1a1a10|m|湖の底に潜む、とてつもなく大きなナマズ。
+雲海フグ|4|朝|95|15|40|r|#e8f0ff|#ffffff|#a0b8e0|d|雲のようにふくらんで浮かぶ不思議なフグ。
+巨大パンダウナギ|5|夜|110|100|200|e|#ffffff|#ffffff|#1a1a1a|b|白黒模様の巨大ウナギ。めったに姿を見せない。
+キス|1|朝昼|65|15|30|l|#e8d8b0|#fff8e8|#c0a880||砂浜にすむ、上品な味の魚。
+ハゼ|1|昼夕|65|8|20|l|#a08a6a|#e0d0b0|#5a4a3a|m|干潟や河口で見られる。大きな胸びれを持つ。
+カレイ|2|朝夜|75|20|45|f|#8a7a5a|#d8c8a0|#5a4a30|d|平たい体で砂にかくれる。目は右側にある。
+メバル|2|夜|80|15|30|n|#8a5a4a|#e0b090|#5a3020|m|大きな目で夜の海を見張る。
+アイナメ|2|夕夜|85|20|45|n|#8a6a3a|#d8b880|#4a3010|m|岩場にすむ。季節で体の色が変わる。
+ヒラメ|3|朝夕|95|40|90|f|#7a6a4a|#c8b890|#3a2a18|d|カレイに似るが目は左側。鋭い歯を持つ。
+マゴチ|3|昼|100|40|70|l|#8a7a5a|#d0c098|#4a3a28|d|平たい頭で砂にひそみ、獲物を待つ。
+タツノオトシゴ|4|昼|110|6|15|s|#e8b040|#f8d880|#a06a10||馬のような顔をした、立って泳ぐ魚。
+ルビーシードラゴン|4|夜|120|15|30|s|#d02a4a|#f08aa0|#ffe0a0|g|ルビー色に輝く、海藻のような姿の魚。
+白銀クエ|5|夜|140|80|150|r|#d8e0e8|#ffffff|#3a7ad0|m|銀白色の巨体に青い模様を持つ、特別なクエ。`;
+const FISH=FD.split('\n').map((l,i)=>{const a=l.split('|');return{i,name:a[0],r:+a[1],times:a[2],pow:+a[3],min:+a[4],max:+a[5],shape:a[6],c1:a[7],c2:a[8],c3:a[9],pat:a[10],desc:a[11],spot:Math.floor(i/10)}});
+const GEAR={rod:{label:'釣り竿',eff:'魚の抵抗を抑える（暴れにくく、逃げる勢いが弱まる）',items:[['木製の釣り竿',5,0],['竹製の釣り竿',15,650],['カーボンロッド',28,2300],['高性能カーボンロッド',42,7800],['マスターロッド',60,23000]]},
+reel:{label:'リール',eff:'回復量アップ、狙いの範囲が広がる',items:[['初心者リール',3,0],['スピニングリール',10,500],['高性能リール',18,2000],['プロリール',28,6500],['マスターリール',45,19500]]},
+line:{label:'釣り糸',eff:'時間経過と抵抗によるゲージ減少を軽減',items:[['麻の釣り糸',2,0],['ナイロンライン',8,400],['フロロカーボンライン',15,1600],['高強度PEライン',25,5200],['特殊強化ライン',40,15500]]}};
+const RW=[0,45,30,16,7,2],BASEP=[0,30,70,160,400,1000],SPM=[1,1.5,2.2,3,4,5,6.5];
+const WAKE=[['朝まで寝る',360],['昼まで寝る',720],['夕方まで寝る',1020],['夜まで寝る',1200]];
+const MAXMIN=29*60+59;
+
+/* ---------- 時間 ---------- */
+const hh=m=>Math.floor(m/60)%24;
+const fmt=m=>String(hh(m)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+const band=m=>{const h=hh(m);return h>=6&&h<11?'朝':h>=11&&h<16?'昼':h>=16&&h<19?'夕':'夜'};
+const power=()=>GEAR.rod.items[S.eq.rod][1]+GEAR.reel.items[S.eq.reel][1]+GEAR.line.items[S.eq.line][1];
+const mark=rec=>{const p=power();return p>=rec?'◎':p>=rec*0.7?'△':'×'};
+const priceOf=(f,s)=>Math.round(BASEP[f.r]*SPM[f.spot]*(0.7+0.6*(s-f.min)/((f.max-f.min)||1)));
+
+/* ---------- 状態 ---------- */
+let S,scr='home',aqSpot=0,dexF={spot:-1,r:0},shopTab='rod',cvMode='',F=null,aqFish=[];
+function genQuests(day,unl,min){const r=rng(day*7919+13),pick=a=>a[Math.floor(r()*a.length)];const sp=SPOTS.filter(s=>unl[s.id]);
+const bands=[...new Set(Array.from({length:Math.max(1,Math.floor((MAXMIN-min)/30))},(_,i)=>band(min+i*30)))];
+const e={d:'簡単',rw:100,t:'count',n:2+Math.floor(r()*2)};
+const n=Object.assign({d:'普通',rw:200},pick([{t:'spot',spot:pick(sp).id,n:1+Math.floor(r()*2)},{t:'band',band:pick(bands)},{t:'species',n:2}]));
+const h=Object.assign({d:'難しい',rw:350},r()<0.5?{t:'rare',r:3}:{t:'size',cm:30+10*Math.min(2,sp.length-1)});
+return[e,n,h].map(q=>Object.assign(q,{got:0}))}
+const fresh=()=>({v:1,look2:{...LOOKDEF},day:1,min:360,coins:0,unl:{pond:1},eq:{rod:0,reel:0,line:0},own:{rod:[0],reel:[0],line:[0]},inv:[],dex:{},today:[],quests:genQuests(1,{pond:1},360),set:{bgm:0.4,se:0.7,amb:0.7}});
+const KEY='dotfish_save_v1';
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));return true}catch(e){return false}}
+function loadLocal(){try{const d=JSON.parse(localStorage.getItem(KEY)||'null');return d&&d.v?d:null}catch(e){return null}}
+function qInfo(q){const T=S.today;let txt,cur,need=q.n||1;
+if(q.t==='count'){txt=`魚を${q.n}匹釣る`;cur=T.length}
+else if(q.t==='spot'){txt=`${SPOTS.find(s=>s.id===q.spot).name}で${q.n}匹釣る`;cur=T.filter(c=>c.spot===q.spot).length}
+else if(q.t==='band'){txt=`${q.band==='夕'?'夕方':q.band}に魚を釣る`;cur=T.filter(c=>c.band===q.band).length}
+else if(q.t==='species'){txt=`異なる種類の魚を${q.n}種類釣る`;cur=new Set(T.map(c=>c.id)).size}
+else if(q.t==='rare'){txt=`★${q.r}以上の魚を1匹釣る`;cur=T.filter(c=>FISH[c.id].r>=q.r).length}
+else{txt=`体長${q.cm}cm以上の魚を釣る`;cur=T.filter(c=>c.size>=q.cm).length}
+return{txt,cur:Math.min(cur,need),need,ok:cur>=need}}
+
+/* ---------- 音 ---------- */
+let AC=null;
+function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended')AC.resume().catch(()=>{});return AC}
+function tone(f,d,type,vol,when=0,dest){const a=AC;if(!a||vol<=0)return;const o=a.createOscillator(),g=a.createGain(),t=a.currentTime+when;o.type=type;o.frequency.value=f;g.gain.setValueAtTime(vol*0.07,t);g.gain.exponentialRampToValueAtTime(0.0001,t+d);o.connect(g).connect(dest||a.destination);o.start(t);o.stop(t+d+0.02)}
+function se(k){if(!S)return;const v=S.set.se;({tap:()=>tone(880,.06,'square',v),good:()=>{tone(988,.08,'square',v);tone(1319,.1,'square',v,.06)},bad:()=>tone(196,.15,'sawtooth',v),hit:()=>{tone(660,.08,'square',v);tone(660,.08,'square',v,.12)},
+win:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.18,'square',v,i*.1)),lose:()=>[392,330,262].forEach((f,i)=>tone(f,.2,'triangle',v,i*.12)),coin:()=>{tone(1319,.06,'square',v);tone(1760,.12,'square',v,.06)}})[k]?.()}
+const MEL=[523,0,659,784,659,0,587,523,440,0,523,587,523,0,392,0,440,0,523,659,587,0,523,440,392,0,440,523,0,0,0,0];let mi=0;
+function pad(f,d,vol,when=0,dest){const a=AC;if(!a||vol<=0)return;const o=a.createOscillator(),g=a.createGain(),t=a.currentTime+when;o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(vol*.045,t+d*.35);g.gain.linearRampToValueAtTime(0.0001,t+d);o.connect(g).connect(dest||a.destination);o.start(t);o.stop(t+d+.05)}
+function bell(f,vol,when=0,dest){const a=AC;if(!a||vol<=0)return;[[1,1],[2,.25],[3,.08]].forEach(([m,v])=>{const o=a.createOscillator(),g=a.createGain(),t=a.currentTime+when;o.type='sine';o.frequency.value=f*m;g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(vol*.05*v,t+.03);g.gain.exponentialRampToValueAtTime(0.0001,t+2.4/m);o.connect(g).connect(dest||a.destination);o.start(t);o.stop(t+2.5)})}
+function bubble(vol,dest){const a=AC;if(!a||vol<=0)return;const o=a.createOscillator(),g=a.createGain(),t=a.currentTime,f=500+Math.random()*500;o.type='sine';o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(f*2.2,t+.08);g.gain.setValueAtTime(vol*.03,t);g.gain.exponentialRampToValueAtTime(0.0001,t+.1);o.connect(g).connect(dest||a.destination);o.start(t);o.stop(t+.12)}
+/* ---- 環境音 ---- */
+let ambBuf=null;const amb={};
+function noiseBuf(){if(ambBuf)return ambBuf;const a=AC,b=a.createBuffer(1,a.sampleRate*3,a.sampleRate),d=b.getChannelData(0);let l=0;for(let i=0;i<d.length;i++){const w=Math.random()*2-1;l=(l+.02*w)/1.02;d[i]=w*.4+l*3.2}return ambBuf=b}
+const AMBL={lap:['lowpass',420,.7],flow:['bandpass',1200,.6],fall:['lowpass',950,.5],wind:['bandpass',480,1.2],waves:['lowpass',650,.6]};
+function ambL(k){if(amb[k])return amb[k];const a=AC,[ty,fr,q]=AMBL[k],src=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();src.buffer=noiseBuf();src.loop=true;src.playbackRate.value=.85+Math.random()*.3;f.type=ty;f.frequency.value=fr;f.Q.value=q;g.gain.value=0;src.connect(f).connect(g).connect(a.destination);src.start(0,Math.random()*2);return amb[k]={g}}
+function ambSet(k,v){const L=ambL(k);L.g.gain.setTargetAtTime(Math.max(0,v),AC.currentTime,.6)}
+function evOsc(type,f0,f1,dur,vol,when=0,lp){const a=AC,o=a.createOscillator(),g=a.createGain(),t=a.currentTime+when;o.type=type;o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(vol,t+dur*.2);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);let n=o;if(lp){const f=a.createBiquadFilter();f.type='lowpass';f.frequency.value=lp;o.connect(f);n=f}n.connect(g).connect(a.destination);o.start(t);o.stop(t+dur+.02)}
+const chirp=v=>{const n=2+Math.floor(Math.random()*3),f=2600+Math.random()*1400;for(let i=0;i<n;i++)evOsc('sine',f*(1+i*.04),f*1.35,.07,v*.025,i*.11)};
+const cricket=v=>{const f=4200+Math.random()*400;for(let i=0;i<4;i++)evOsc('sine',f,f*1.01,.03,v*.01,i*.05)};
+const croak=v=>{for(let i=0;i<2;i++)evOsc('sawtooth',170,140,.16,v*.03,i*.24,600)};
+const gull=v=>{for(let i=0;i<2+Math.floor(Math.random()*2);i++)evOsc('sawtooth',1350,800,.32,v*.018,i*.42,2200)};
+let ambT=0;
+setInterval(()=>{if(!AC||AC.state!=='running'||!S)return;ambT+=.3;const on=scr==='fishing'&&F&&cvMode!=='mini',v=on?(S.set.amb??.7):0,si=on?F.spot:-1,b=band(S.min),day=b==='朝'||b==='昼',lap=.7+.3*Math.sin(ambT*1.3)+Math.random()*.15,sw=.5+.5*Math.sin(ambT*2*Math.PI/7);
+const G={lap:0,flow:0,fall:0,wind:0,waves:0};
+if(si===0){G.lap=.045*lap;G.wind=.012}if(si===1){G.flow=.07;G.lap=.015}if(si===2){G.flow=.08;G.fall=.05}if(si===3){G.lap=.05*lap;G.wind=.025}
+if(si===4){G.waves=.03+.1*sw*sw}if(si===5){G.lap=.05*lap;G.waves=.02+.03*sw}if(si===6){G.waves=.05+.11*sw;G.wind=.035}
+for(const k in G)if(G[k]||amb[k])ambSet(k,G[k]*v);if(!on||v<=0)return;
+const sea=si>=4;if(day&&!sea&&Math.random()<(b==='朝'?.12:.07))chirp(v);if(!day&&b!=='夕'&&!sea&&Math.random()<.3)cricket(v);if(b==='夕'&&!sea&&Math.random()<.12)cricket(v);
+if(si===0&&!day&&Math.random()<.07)croak(v);if(sea&&b!=='夜'&&Math.random()<.04)gull(v);if(si===5&&Math.random()<.02)bell(392,v*.6)},300);
+const AQMEL=[659,0,784,0,880,0,1047,0,880,0,784,0,659,0,587,0,523,0,587,0,659,0,784,0,659,0,587,0,523,0,0,0,440,0,523,0,587,0,659,0,587,0,523,0,440,0,392,0,440,0,523,0,0,0,0,0,0,0,0,0,0,0,0,0];
+const FDAY=[392,0,494,587,0,494,440,392,330,0,392,440,494,0,440,0,392,0,494,587,659,0,587,494,440,0,392,330,392,0,0,0];
+const FDB=[98,147,131,98,110,165,147,110];
+const FNIGHT=[440,0,0,523,0,0,659,0,587,0,0,523,0,0,440,0,0,0,392,0,0,440,0,0,523,0,494,0,0,440,0,0,0,0,0,0];
+let xi=0;const FNCH=[[110,165,220,262],[87,131,175,220],[98,147,196,247],[82,123,165,196]];let fi=0;
+const AQCH=[[131,165,196,247],[110,131,165,196],[87,110,131,165],[98,123,147,165]];let ai=0;
+let mBus=null,mKey='';function bus(k){if(mKey!==k){if(mBus){const g=mBus;g.gain.setTargetAtTime(0,AC.currentTime,.07);setTimeout(()=>{try{g.disconnect()}catch(e){}},1500)}mBus=AC.createGain();mBus.connect(AC.destination);mKey=k}return mBus}
+setInterval(()=>{if(!AC||AC.state!=='running'||!S||S.set.bgm<=0)return;const v=S.set.bgm;const nt=band(S.min)==='夕'||band(S.min)==='夜',mg=cvMode==='mini',B=bus(mg?'mini':scr==='aqua'?'aqua':nt?'night':'day');
+if(mg){const BS=[131,196,131,196,175,262,175,262,196,294,196,294,131,196,165,196],LD=[523,659,784,659,880,784,659,784,587,659,784,880,1047,880,784,659];for(let h=0;h<2;h++){const st=(xi*2+h)%16,w=h*.15;tone(BS[st],.12,'square',v*.55,w,B);if(LD[st]&&st%2===0)tone(LD[st],.14,'triangle',v*.6,w,B);tone(7000,.02,'square',v*(h?.06:.1),w,B)}xi++;return}
+if(scr!=='aqua'&&(band(S.min)==='夕'||band(S.min)==='夜')){if(fi%2===0){const n=FNIGHT[(fi/2)%FNIGHT.length];if(n){bell(n,v*.55,0,B);bell(n,v*.2,.5,B)}}if(fi%32===0)FNCH[Math.floor(fi/32)%4].forEach((f,k)=>pad(f*2,9.6,v*(k?.55:.8),k*.1,B));fi++;return}
+if(scr==='aqua'){if(ai%2===0){const n=AQMEL[(ai/2)%AQMEL.length];if(n){bell(n,v*.9,0,B);bell(n,v*.35,.45,B)}}if(ai%32===0)AQCH[Math.floor(ai/32)%4].forEach((f,k)=>pad(f*2,9.6,v*(k?.7:1),k*.08,B));if(Math.random()<.04)bubble(v,B);ai++;return}
+const n=MEL[mi%MEL.length];if(n)tone(n,.28,'triangle',v*.7,0,B);if(mi%4===0)tone([131,110,147,98][Math.floor(mi/8)%4],.5,'triangle',v*.6,0,B);mi++},300);
+
+/* ---------- ドット素材 ---------- */
+const IPAL={k:'#2a1a10',R:'#d84a3a',W:'#fff3d6',B:'#8a5a30',G:'#6ab0e0',l:'#d8d8d8',K:'#3a2a1a',A:'#4aa0d8',O:'#ff7a1a',S:'#f2d79b',Y:'#ffcf4a',C:'#c88a10',V:'#4aa04a',D:'#2e7a34'};
+const ICONS={
+home:['....kk....','...kRRk...','..kRRRRk..','.kRRRRRRk.','kkkkkkkkkk','.kWWWWWWk.','.kWBBWGWk.','.kWBBWGWk.','.kWBBWWWk.','.kkkkkkkk.'],
+rod:['........B.','.......B.l','......B..l','.....B...l','....B....l','...B.....l','..B......R','.B.......W','KB........','K.........'],
+tank:['kkkkkkkkkk','kGGGGGGGGk','kAAAAAAAAk','kAAOOWAAAk','kAOOOWOAVk','kAAOOWAAVk','kAAAAAAVAk','kSSSSSSSSk','kkkkkkkkkk','.kB....Bk.'],
+book:['.kkkkkkkk.','kVVVVVVVWk','kVYYYYVVWk','kVVVVVVVWk','kVYYYVVVWk','kVVVVVVVWk','kVVVVVVVWk','kDVVVVVVWk','kkkkkkkkkk','..........'],
+bag:['...kkkk...','..k....k..','.kkkkkkkk.','kBBBBBBBBk','kBBkkkkBBk','kBkYYYYkBk','kBkYCCYkBk','kBkYYYYkBk','kBBkkkkBBk','.kkkkkkkk.'],
+gear:['...kkkk...','.kklllkk..','.klllllk..','klllkklllk','kllk..kllk','kllk..kllk','klllkklllk','.klllllk..','.kklllkk..','...kkkk...'],
+coin:['..kkkk..','.kYYYYk.','kYYWYYYk','kYWYCYYk','kYYYCYYk','kYYYCYCk','.kYCCCk.','..kkkk..'],
+map:['kkkkkkkkkk','kWWkSSkWWk','kWRkSSkWWk','kWWkSSkWVk','kWWkSRkWVk','kWWkSSkWWk','kWWkSSkWWk','kkkkkkkkkk'],
+hanger:['...kk...','..k..k..','.....k..','....k...','...kk...','..kWWk..','.kWWWWk.','kkkkkkkk'],
+moon:['...kkk..','..kYYk..','.kYYk...','.kYYk...','.kYYk...','.kYYYk.k','..kYYYYk','...kkkk.'],
+note:['kkkkkkkk','kWWWWWWk','kWkkkkWk','kWWWWWWk','kWkkkWWk','kWWWWWWk','kWkkkkWk','kkkkkkkk']};
+const iconURL={};
+for(const k in ICONS){const m=ICONS[k],c=mkc(m[0].length,m.length),g=c.getContext('2d');m.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch!=='.')P(g,x,y,IPAL[ch])}));iconURL[k]=c.toDataURL()}
+const ico=(k,s)=>`<img class="ico${s?' s':''}" src="${iconURL[k]}" alt="">`;
+document.querySelectorAll('[data-ico]').forEach(e=>e.src=iconURL[e.dataset.ico]);
+
+const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const mix=(a,b,t)=>{const A=hex(a),B=hex(b);return'#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('')};
+const SEAH=['....OOOO......','...ODMMMO.....','..ODMMLMMOOOO.','..OMMEMLLLLLO.','..OMMMMOOOOO..','...OMMLO......','...OMMLLO.....','..FOMDLLO.....','..FOMMLLLO....','..FOMDMLLO....','...OMMMLLO....','...OODMLLO....','....OMMLO.....','....ODMLO.....','.....OMLO.....','.....OMO..OO..','.....OMMOOMO..','......OMMMMO..','.......OOOO...'];
+const JELLY=['.....OOOOOO....','...OOHLLLLLOO..','..OHHLLLLLLLLO.','.OHLLLLLLLLLLLO','.OLLELLLLLELLLO','.OLLLLLLLLLLLLO','.OMLLLLMMLLLLMO','..OMMMMMMMMMMO.','..O.F.F.FF.F.O.','...F.F..F..F...','..F..F.F..F....','...F..F...F....','..F...F..F.....'];
+const sprCache={};
+function fishSprite(id,sil,sc){sc=sc||1;const k=id+(sil?'s':'')+sc;if(sprCache[k])return sprCache[k];const f=FISH[id];
+if(sc!==1&&(f.shape==='s'||f.shape==='j')){const b=fishSprite(id,sil),c=mkc(Math.round(32*sc),Math.round(20*sc)),g=c.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(b,0,0,c.width,c.height);return sprCache[k]=c}
+const W=Math.round(32*sc),H=Math.round(20*sc),c=mkc(W,H),g=c.getContext('2d');
+const C=Array.from({length:H},()=>Array(W).fill(null)),put=(x,y,col)=>{x=Math.round(x);y=Math.round(y);if(x>=1&&y>=1&&x<W-1&&y<H-1)C[y][x]=col};
+const r=rng(id*31+5),c1=f.c1,c2=f.c2,c3=f.c3,sh=f.shape,dk=(a,t)=>mix(a,'#000000',t),lt=(a,t)=>mix(a,'#ffffff',t);
+const fin=mix(lt(c1,.2),c3,.25),finD=dk(fin,.22);
+if(sh==='s'||sh==='j'){const m=sh==='s'?SEAH:JELLY,ox=Math.floor((W-m[0].length)/2),oy=Math.floor((H-m.length)/2);const pal={O:dk(c1,.55),D:dk(c1,.25),M:c1,L:c2,H:lt(c2,.5),E:'#140c0c',F:sh==='j'?lt(c1,.35):fin};
+m.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch!=='.'){let col=pal[ch];if(f.pat==='g'&&'ML'.includes(ch)&&r()<.18)col=r()<.5?'#ffffff':c3;put(ox+x,oy+y,col)}}));
+if(sh==='j')put(ox+5,oy+3,'#ffffff')}
+else{const P0={n:[18,10,10.5,5.4],r:[18,10,9,7.2],l:[17.5,10,12.5,3.4],c:[18,10.5,11,5],e:[16.5,10,14,2.6],f:[17,10,11.5,6.2]}[sh].map(v=>v*sc),[cx,cy,rx,ry]=P0;
+const inB=(x,y)=>{if(sh==='e'){const nx=(x-cx)/rx;if(nx<-1||nx>1)return false;const k=nx>0?Math.sqrt(1-nx*nx):Math.min(1,.25+(1+nx)*1.1);return Math.abs(y-cy)<=ry*k+.25}return((x-cx)/rx)**2+((y-cy)/ry)**2<=1};
+if(sh==='f')for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(!inB(x,y)&&((x-cx)/(rx+1.6))**2+((y-cy)/(ry+1.6))**2<=1)put(x,y,(x+y)%2?fin:finD);
+if(sh!=='e'){const t0=cx-rx+1.5*sc,tl=Math.max(2,Math.round((sh==='l'||sh==='f'?3:5)*sc));for(let x=Math.floor(t0-tl);x<=t0;x++){const k=t0-x,hw=k*(sh==='r'?1:.85)+.8;for(let y=-hw;y<=hw;y+=.5){if(k>tl-2&&Math.abs(y)<hw*.35&&sh!=='r')continue;put(x,cy+y,Math.abs(Math.round(y))%2?fin:finD)}}}
+if('nrcl'.includes(sh)){const a=cx-rx*.55,b=cx+rx*.15;for(let x=Math.floor(a);x<=b;x++){const q=(x-a)/(b-a),h=sh==='l'?1:Math.round(1+2.2*sc*Math.sin(q*Math.PI*.9));for(let j=1;j<=h;j++){const yb=cy-ry*Math.sqrt(Math.max(0,1-((x-cx)/rx)**2));put(x+j*.3,yb-j+.6,x%2?fin:finD)}}
+const ax=cx-rx*.35;for(let x=Math.floor(ax);x<ax+3;x++){const yb=cy+ry*Math.sqrt(Math.max(0,1-((x-cx)/rx)**2));put(x,yb+.8,fin);put(x-1,yb+1.6,finD)}}
+if(sh==='e'){for(let x=Math.floor(cx-rx*.6);x<cx+rx*.5;x++){put(x,cy-ry-.6,x%2?fin:finD);put(x,cy+ry+.6,x%2?finD:fin)}for(let x=Math.floor(cx-rx-2);x<cx-rx*.6;x++){const k=(x-(cx-rx-2))/(rx*.4+2);for(let y=-1-k*1.5;y<=1+k*1.5;y+=.5)if(!inB(x,cy+y))put(x,cy+y,Math.abs(Math.round(y))%2?fin:finD)}}
+for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!inB(x,y))continue;const ny=(y-cy)/ry,nx=(x-cx)/rx,th=BAY[(y&3)*4+(x&3)]/16;
+const v=ny+th*.32-.16;let col=v<-.62?dk(c1,.32):v<-.12?c1:v<.36?mix(c1,c2,.55):c2;
+if(ny>.62)col=dk(col,.08);
+const p=f.pat;
+if(p==='b'){const s=(x-Math.round(cx-rx))%Math.max(4,Math.round(7*sc));if(s===0||(sc>.6&&s===1))col=v<-.12?dk(c3,.15):c3}
+else if(p==='d'&&r()<.16&&ny<.5)col=c3;
+else if(p==='m'&&Math.sin(x*.9+id)+Math.cos(y*1.3+id*2)+Math.sin((x+y)*.5)>1.2)col=v<0?dk(c3,.1):c3;
+else if(p==='p'&&Math.abs(y-cy)<=1.6&&((x-Math.round(cx-rx))%Math.max(3,Math.round(6*sc)))<Math.max(1,Math.round(3*sc)))col=mix(c3,col,.25);
+else if(p==='s'&&Math.abs(y-(cy+.2))<=.8)col=c3;
+else if(p==='g'&&r()<.12)col=r()<.5?'#ffffff':c3;
+if(!p&&ny>-.6&&ny<.3&&(x+y*2)%5===0)col=dk(col,.08);
+if(Math.abs(nx-.42)<.05&&Math.abs(ny)<.62)col=dk(col,.22);
+if(ny<-.3&&!inB(x,y-1))col=lt(col,.35);
+put(x,y,col)}
+if('nrc'.includes(sh))for(let x=Math.floor(cx-rx*.5);x<cx+rx*.3;x+=2)if(inB(x,cy-1)&&f.pat!=='s')put(x,cy-1,dk(C[Math.round(cy-1)][x]||c1,.12));
+const px=cx+rx*.28,py=cy+ry*.25;put(px,py,lt(fin,.2));put(px-1,py,fin);if(sc>.6){put(px-2,py+1,finD);put(px-1,py+1,fin)}
+const ex=cx+rx*(sh==='l'||sh==='e'?.72:.66),ey=cy-ry*(sh==='e'?.1:.3);
+if(sh==='f'){[[0,-2.2],[0,.4]].forEach(([a,b2])=>{put(ex+a,ey+b2,'#140c0c');put(ex+a-1,ey+b2,lt(c2,.4))})}
+else if(sc<.6){put(ex,ey,'#140c0c')}else{put(ex,ey,'#140c0c');put(ex+1,ey,'#140c0c');put(ex,ey+1,'#140c0c');put(ex+1,ey+1,'#2a1a14');put(ex,ey,'#ffffff');put(ex-1,ey,lt(c1,.45));put(ex-1,ey+1,lt(c1,.3))}
+put(cx+rx-.3,cy+ry*.25,dk(c1,.4));
+if(f.name==='ブルーギル')[[0,0],[1,0],[0,1],[1,1]].forEach(([a,b2])=>put(cx+rx*.38+a,cy-.5+b2,'#1a2440'));
+if(sh==='c'||/コイ/.test(f.name)){const wl=Math.max(1,Math.round((sh==='c'?4:2)*sc)),y0=cy+ry*.35;for(let i=0;i<wl;i++){put(cx+rx+1+i,y0+i*.6,'#3a2a20');if(sh==='c')put(cx+rx+i*.8,y0-1.4-i*.5,'#3a2a20')}}}
+const ol=sil?'#141c2c':null;
+for(let y=0;y<H;y++)for(let x=0;x<W;x++){const v=C[y][x];if(v){P(g,x,y,sil?'#2c3a54':v);continue}
+const nb=[[1,0],[-1,0],[0,1],[0,-1]].map(([a,b2])=>C[y+b2]&&C[y+b2][x+a]).find(Boolean);if(nb)P(g,x,y,ol||mix(nb,'#000000',.6))}
+return sprCache[k]=c}
+const sprURL={};const fishURL=(id,sil)=>{const k=id+(sil?'s':'');return sprURL[k]||(sprURL[k]=fishSprite(id,sil).toDataURL())};
+
+/* ---------- 画面描画 ---------- */
+const view=$('#view');
+function updTop(){$('#hDate').innerHTML=`${ico('moon',1)} ${S.day}日目 ${fmt(S.min)} ${band(S.min)==='夕'?'夕方':band(S.min)}${DEV()?' <span class="tag" style="background:#6a4aa8">開発</span>':''}`;$('#hCoin').innerHTML=`${ico('coin',1)} ${S.coins.toLocaleString()}`;
+document.querySelectorAll('nav .wb').forEach(b=>b.classList.toggle('on',b.dataset.v===(scr==='fishing'?'spots':scr==='quests'||scr==='closet'||scr==='cooler'?'home':scr)))}
+let toastT;function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('show'),1800)}
+function modal(h){$('#mbox').innerHTML=h;$('#modal').classList.add('show')}
+function closeModal(){$('#modal').classList.remove('show')}
+function go(s){if(scr==='fishing'&&F&&['wait','hit','play'].includes(F.phase)&&s!=='fishing'){F=null;toast('糸を巻き上げた')}scr=s;render()}
+function render(){aqAll=DEV();updTop();cvMode='';mapOpen=false;view.classList.toggle('full',scr==='aqua'||scr==='fishing'||scr==='home'||scr==='spots');({cooler:vCooler,closet:vCloset,home:vHome,spots:vSpots,fishing:vFishing,aqua:vAqua,dex:vDex,shop:vShop,quests:vQuests})[scr]();view.scrollTop=0}
+
+function questRows(){return S.quests.map((q,i)=>{const o=qInfo(q);return`<div class="row"><div><div><span class="tag" style="background:${['#4a9a4a','#d08a10','#c8403a'][i]}">${q.d}</span> ${o.txt}</div><div class="muted">${o.cur}/${o.need}・報酬 ${q.rw}コイン</div></div>${q.got?'<span class="muted">受取済</span>':o.ok?`<button class="wb sm gold" data-act="claim" data-v="${i}">受け取る</button>`:'<span class="muted">未達成</span>'}</div>`}).join('')}
+const DEV=()=>!!(S&&S.dev);
+let HOFF=0,homeCv=null;const extC={};
+function vHome(){const inv=S.inv,ready=S.quests.filter(q=>!q.got&&qInfo(q).ok).length;
+view.innerHTML=`<div id="hmBox" style="position:relative;height:100%;overflow:hidden;background:#0c0f18">
+<canvas id="cv" style="width:100%;display:block;image-rendering:pixelated" aria-label="水辺のキャンプ地"></canvas>
+<div style="position:absolute;left:8px;right:8px;bottom:8px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px">
+<button class="wb big gold" style="grid-column:1/-1" data-act="fishgo">${ico('rod')}釣りに出かける</button>
+<button class="wb" data-act="go" data-v="quests">${ico('note')}依頼${ready?` <span class="tag">${ready}</span>`:''}</button><button class="wb" data-act="go" data-v="cooler">${ico('bag')}クーラー${inv.length?` <span class="tag">${inv.length}</span>`:''}</button>
+<button class="wb" data-act="sleep">${ico('moon')}ベッドで寝る</button><button class="wb" data-act="closet">${ico('hanger')}着替える</button></div></div>`;
+const cv=$('#cv'),bx=$('#hmBox'),k=HW/bx.clientWidth,ht=Math.max(176,Math.floor(bx.clientHeight*k));cv.width=HW;cv.height=ht;
+HOFF=Math.max(0,ht-Math.round(190*k)-30-WL);HH=ht-HOFF;homeCv=mkc(HW,HH);cvMode='home'}
+function drawHomeFull(g,t){drawHome(homeCv.getContext('2d'),t);const b=band(S.min),k=b+HOFF;
+if(HOFF>0){if(!extC[k]){const c=mkc(HW,HOFF),e=c.getContext('2d');grad(e,0,0,HW,HOFF,[mix(SKY[b][0],'#000000',b==='夜'?.3:.18),SKY[b][0]]);if(b==='夜'){const r=rng(21);for(let i=0;i<40;i++)P(e,r()*HW,r()*HOFF,r()<.3?'#ffffff':'#8a9ad0')}extC[k]=c}g.drawImage(extC[k],0,0)}
+g.drawImage(homeCv,0,HOFF)}
+function vCloset(){if(!S.look2)S.look2={...LOOKDEF};const L=S.look2,sw=(k,lab)=>`<div class="opt"><span>${lab}</span><div class="sw">${LOOKS[k].map((c,i)=>`<button class="${(L[k]||0)===i?'on':''}" style="background:${c}" data-act="lks" data-v="${k}:${i}" aria-label="${lab}${i+1}"></button>`).join('')}</div></div>`;
+view.innerHTML=`<canvas class="px" id="cv" width="48" height="30" aria-label="キャラクターのプレビュー（正面と後ろ姿）"></canvas>
+<div class="panel"><h2>${ico('hanger',1)}着せ替え</h2>${sw('skin','肌の色')}<div class="opt"><span>髪型</span><button class="wb sm" data-act="hs" data-v="-1" aria-label="前の髪型">◀</button><b>${HAIRSTY[L.hs||0].n}</b><button class="wb sm" data-act="hs" data-v="1" aria-label="次の髪型">▶</button></div>${sw('hairC','髪の色')}${sw('hatC','帽子')}${sw('band','リボン')}${sw('vestC','ベスト')}${sw('shirtC','シャツ')}${sw('pants','ズボン')}</div>
+<div class="btns"><button class="wb big" data-act="lkr">おまかせ</button><button class="wb big" data-act="lkreset">元に戻す</button><button class="wb big gold" style="grid-column:1/-1" data-act="lkdone">${S.firstLook?'この姿ではじめる':'決定'}</button></div>`;cvMode='closet'}
+/* ---- 水族館（部屋と地図） ---- */
+function blob(g,cx,cy,rx,ry,c){for(let y=cy-ry;y<=cy+ry;y++)for(let x=cx-rx;x<=cx+rx;x++){const d=((x-cx)/rx)**2+((y-cy)/ry)**2;if(d<=1)P(g,x,y,(y-cy)/ry>.3?mix(c,'#000000',.3):((x-cx)/rx<-.2&&(y-cy)/ry<-.2)?mix(c,'#ffffff',.25):c)}}
+
+const AW=192;let AH=320,AWY=220,aqRoom=0,aqAll=true,aqChar={x:96,y:290,tx:96,ty:290,face:0,step:0},aqAct=null,aqLive=[];const aqStatic={},aqInt={};
+const FN=n=>FISH.findIndex(f=>f.name===n);
+const AQR=[
+{n:'小さな魚の部屋',amb:'#1a2236',tanks:[{x:10,y:34,w:82,h:56,t:'pond',f:['メダカ','タナゴ','ドジョウ']},{x:100,y:34,w:82,h:56,t:'river',f:['オイカワ','カワムツ','ハヤ']},{x:10,y:118,w:82,h:56,t:'stream',f:['ハリヨ','カワヨシノボリ','アブラハヤ']},{x:100,y:118,w:82,h:56,t:'sea',f:['ワカサギ','ハゼ']}]},
+{n:'渓流のゾーン',amb:'#16242a',tanks:[{x:8,y:30,w:176,h:96,t:'stream',f:['ヤマメ','アマゴ','イワナ','ニジマス','サクラマス','ブラウントラウト']},{x:8,y:142,w:84,h:58,t:'river',f:['アユ','ウグイ','カジカ']},{x:100,y:142,w:84,h:58,t:'forest',f:['しましまヤマメ','木漏れ日フィッシュ','リボンフィッシュ']}]},
+{n:'池と湖の大水槽',amb:'#142034',tanks:[{x:6,y:28,w:180,h:178,t:'lake',f:['コイ','フナ','ニシキゴイ','黄金のコイ','ヘラブナ','ブルーギル','ブラックバス','ラージマウスバス','ソウギョ','ライギョ','ナマズ','巨大オオナマズ','チョウザメ','巨大パンダウナギ']}]},
+{n:'海のゾーン',amb:'#101c34',tanks:[{x:8,y:30,w:132,h:170,t:'sea',st:'arch',f:['キス','カレイ','メバル','アイナメ','ヒラメ','マゴチ','白銀クエ']},{x:148,y:58,w:36,h:132,t:'sea',st:'cyl',f:['タツノオトシゴ','ルビーシードラゴン']}]},
+{n:'ふしぎの間',amb:'#160f2a',tanks:[{x:14,y:64,w:30,h:124,t:'mystic',st:'cyl',f:['星屑フィッシュ']},{x:58,y:64,w:30,h:124,t:'mystic',st:'cyl',f:['水晶ウオ']},{x:104,y:64,w:30,h:124,t:'mystic',st:'cyl',f:['しずくクラゲウオ']},{x:148,y:64,w:30,h:124,t:'mystic',st:'cyl',f:['雲海フグ']}]}];
+AQR.forEach(r=>r.tanks.forEach(t=>{t.ids=t.f.map(FN);t.oy=t.y;t.oh=t.h}));
+const THW={pond:['#a8e0b8','#78c49c','#58a884','#3a7a62'],river:SPOTS[1].water,stream:SPOTS[2].water,lake:SPOTS[3].water,sea:SPOTS[4].water,forest:['#c8f0b0','#8ad09a','#5aa884','#3a806a'],mystic:['#7a6ac8','#4e3e9a','#30267a','#1a144e']};
+const THG={pond:SPOTS[0].ground,river:SPOTS[1].ground,stream:SPOTS[2].ground,lake:SPOTS[3].ground,sea:SPOTS[4].ground,forest:['#7a6a48','#5a4a30','#9a8a60'],mystic:['#3a2e5a','#2a2044','#5a4a8a']};
+const fsc=f=>f.max<=10?.42:f.max<=30?.55:f.max<=70?.7:.85;
+function shp(st,x,y,w,h){if(x<0||y<0||x>=w||y>=h)return false;if(st==='arch'){const r=Math.min(26,w/2);if(y<r){const cx=x<r?r:x>=w-r?w-r-1:x;return(x-cx)**2+(y-r)**2<=r*r}return true}
+if(st==='cyl'){const e=6,rx=w/2;if(y<e)return((x+.5-rx)/rx)**2+((y-e)/e)**2<=1;if(y>=h-e)return((x+.5-rx)/rx)**2+((y-(h-e))/e)**2<=1;return true}return true}
+function tankInt(t){const L=t.lv||0,k=t.x+'_'+t.y+'_'+t.h+t.t+'_'+L;if(aqInt[k])return aqInt[k];const{w,h}=t,st=t.st||'box',c=mkc(w,h),g=c.getContext('2d'),wc=THW[t.t],gr=THG[t.t],r=rng(t.x*7+t.y),T=t.t,cyl=st==='cyl';
+grad(g,0,0,w,h,L>=5?[mix(wc[0],'#ffffff',.08),...wc.slice(1)]:wc);if(st==='box'){R(g,0,0,w,3,'#0e1420');R(g,0,3,w,1,mix(wc[0],'#ffffff',.5))}
+const sb=x=>Math.round(h-6-(cyl?4:0)+Math.sin(x*.12+t.x)*1.4);
+for(let x=0;x<w;x++)for(let y=sb(x);y<h;y++){const v=r();P(g,x,y,v<.15?gr[1]:v<.25?gr[2]:gr[0])}
+const weed=(x,hh,c1,c2,ph)=>{for(let y=0;y<hh;y++){const xx=x+Math.round(Math.sin(y*.22+ph)*1.6),wd=y<hh-3?2:1;R(g,xx,sb(x)-y,wd,1,y%3?c1:c2);if(y%3===1&&y<hh-2){const sd=y%6<3?2:-1;P(g,xx+sd,sb(x)-y,c2);P(g,xx+sd+(sd>0?1:-1),sb(x)-y-1,c2)}}};
+const xs=n=>Array.from({length:n},(_,i)=>Math.round((i+.5)*w/n+(r()-.5)*w/(n*2)));
+const big=w>=120||t.ids.length>=6,ln=(x0,y0,x1,y1,wd,c)=>{const n=Math.ceil(Math.hypot(x1-x0,y1-y0));for(let i=0;i<=n;i++){const q=i/n;R(g,Math.round(x0+(x1-x0)*q),Math.round(y0+(y1-y0)*q),wd,wd,c)}};
+if(big&&L>=5){for(let i=0;i<Math.round(w/9);i++){const x=Math.round(i*9+r()*5),hh=Math.round(h*(.45+r()*.35)),c=T==='sea'?'rgba(40,110,80,.45)':'rgba(30,80,50,.4)';for(let y=0;y<hh;y++)R(g,x+Math.round(Math.sin(y*.12+i)*2.5),sb(x)-y,2,1,c)}}
+
+const plantC={pond:['#4a7a3a','#6a9a4a'],river:['#3e7a44','#5a9a54'],stream:['#4a8a5a','#7ab06a'],lake:['#2f6a3a','#3e8a4a'],sea:['#3a8a5a','#5aaa6a'],forest:['#3e8a4a','#5aa04a'],mystic:['#6a5ab8','#9a8ae0']}[T];
+if(L>=1){const n=cyl?1:Math.max(2,Math.round(w/40));xs(n).forEach((x,i)=>{if(T==='mystic'){R(g,x,sb(x)-5,3,5,'#c8b8ff');P(g,x+1,sb(x)-5,'#ffffff')}else if(T==='pond'){const hh=18+i*5;R(g,x,sb(x)-hh,1,hh,'#4a7a3a');R(g,x,sb(x)-hh-3,1,4,'#7a4a2a')}else{weed(x,Math.round(h*.38)+i*3,plantC[0],plantC[1],i);weed(x+3,Math.round(h*.24),plantC[1],plantC[0],i+1)}})}
+if(L>=2&&!cyl){[[.22,7,4],[.78,9,5]].forEach(([q,rx,ry],i)=>blob(g,Math.round(w*q),sb(w*q)-2,rx,ry,T==='stream'?'#b8b4a8':T==='mystic'?'#4a3e6a':['#8a8680','#7a7670'][i]))}
+if(L>=2&&cyl&&T!=='mystic')blob(g,w/2,sb(w/2)-1,5,2,'#8a8680');
+if(L>=3){const n=cyl?2:Math.max(3,Math.round(w/26));xs(n).forEach((x,i)=>{if(T==='mystic'){R(g,x+3,sb(x)-8-i%2*3,2,8+i%2*3,'#a898f0');P(g,x+3,sb(x)-8-i%2*3,'#ffffff')}else{weed(x+5,Math.round(h*(.2+(i%3)*.1)),plantC[1],plantC[0],i+3);blob(g,x+5,sb(x+5)-1,3,2,plantC[0])}})}
+if(L>=4){if(T==='pond'){[[w*.3,3,9],[w*.65,3,7]].forEach(([x,y,wd])=>{R(g,x,y,wd,1,'#4a9a3a');R(g,x+1,y-1,wd-2,1,'#6aba4a')});P(g,w*.3+3,2,'#f4a8c8')}
+if(T==='river'){R(g,w*.35,sb(w*.35)-4,w*.3,3,'#5a3e26');R(g,w*.35,sb(w*.35)-4,w*.3,1,'#7a5a3a');for(let i=0;i<5;i++)R(g,6+i*w/5,10+i*7%20,7,1,'rgba(255,255,255,.25)')}
+if(T==='stream'){for(let i=0;i<w/2;i++)R(g,r()*w,sb(40)+1+r()*4,2,1,['#ffffff','#e8e0d0','#c8d8e0'][i%3]);if(w>120)R(g,w-30,4,10,h-14,'rgba(255,255,255,.12)')}
+if(T==='lake'){R(g,w*.45,sb(w*.45)-5,Math.min(60,w*.35),5,'#5a3e26');R(g,w*.45,sb(w*.45)-5,Math.min(60,w*.35),1,'#7a5a3a');blob(g,20,sb(20)-3,12,6,'#6a6458')}
+if(T==='forest'){R(g,w-20,6,12,h-20,'rgba(255,250,200,.12)');R(g,8,6,8,h-24,'rgba(255,250,200,.08)')}
+if(T==='sea'){const cx=cyl?w/2:w*.75,cy=sb(cx);[[0,-14],[-4,-9],[4,-10],[-8,-6],[8,-6]].forEach(([dx,hh])=>{const s2=cyl?.5:1;for(let k2=0;k2>hh*s2;k2--)P(g,cx+dx*s2*Math.min(1,-k2/4),cy+k2,'#ff7f9e');P(g,cx+dx*s2,cy+hh*s2,'#ffb3c4')});
+if(!cyl){const ax=w*.3,ay=sb(ax);for(let k2=0;k2<11;k2++){const a=-Math.PI/2+(k2-5)*.24;for(let q=1;q<=6;q++)P(g,ax+Math.cos(a)*q*1.1,ay-2+Math.sin(a)*q,q===6?'#ff6fa8':'#ffc89a')}blob(g,ax,ay,6,2,'#b06a8c')}}
+if(T==='mystic')for(let i=0;i<20;i++)P(g,r()*w,r()*h*.8,'rgba(255,255,255,.5)')}
+if(big&&L>=3&&T!=='sea'){const bx=Math.round(w*.12),by=sb(bx);ln(bx,by,Math.round(w*.42),Math.round(by-h*.32),5,'#4a3420');ln(bx+1,by-1,Math.round(w*.42)+1,Math.round(by-h*.32),2,'#6a4a2c');ln(Math.round(w*.3),Math.round(by-h*.2),Math.round(w*.22),Math.round(by-h*.42),3,'#4a3420');ln(Math.round(w*.38),Math.round(by-h*.28),Math.round(w*.5),Math.round(by-h*.4),3,'#4a3420');for(let i=0;i<14;i++){const q=i/14;P(g,bx+(w*.42-bx)*q+2,by-(h*.32)*q-1,i%3?'#5a8a3a':'#7aaa4a')}}
+if(big&&L>=3&&T==='sea'){for(let i=0;i<3;i++){const x=Math.round(w*(.15+i*.3)),hh=Math.round(h*(.5+i%2*.15));for(let y=0;y<hh;y++){const xx=x+Math.round(Math.sin(y*.15+i)*2);R(g,xx,sb(x)-y,2,1,y%4?'#3a7a4a':'#5a9a5a');if(y%5===2)R(g,xx+2,sb(x)-y,3,1,'#4a8a4a')}}}
+if(big&&L>=4){const ax=Math.round(w*.62),ay=sb(ax);blob(g,ax-10,ay-6,7,9,'#6a6a62');blob(g,ax+10,ay-6,7,9,'#62625a');blob(g,ax,ay-15,13,4,'#74746c');for(let y=ay-11;y<ay;y++)for(let x=ax-3;x<=ax+3;x++)P(g,x,y,mix(wc[2],'#000000',.15));for(let i=0;i<6;i++)P(g,ax-12+i*5,ay-18+(i%2),plantC[1])}
+if(big&&L>=5){if(T==='sea'){const x=Math.round(w*.35),y=sb(x);R(g,x,y-5,10,5,'#7a4a24');R(g,x,y-6,10,2,'#9a6a34');R(g,x+4,y-4,2,2,'#e8c040');for(let i=0;i<4;i++)P(g,x+1+i*2,y-7,'#ffe070');const ax=Math.round(w*.85);R(g,ax,y-14,2,14,'#6a6a74');R(g,ax-4,y-3,10,2,'#6a6a74');R(g,ax-1,y-15,4,2,'#6a6a74')}
+else{const x=Math.round(w*.72),y=sb(x);for(let i=0;i<22;i++)R(g,x-11+i,y-3+Math.round(Math.abs(i-11)*.12),1,3,i%5?'#6a4a2a':'#4a3018');R(g,x-11,y-5,22,2,'#7a5a34')}}
+if(L>=5){for(let i=0;i<Math.round(w/12);i++){const x=Math.floor(r()*w);P(g,x,sb(x)+1+Math.floor(r()*3),['#f4d0c0','#ffe8d0','#c8d8f0','#f8e0a0'][i%4])}
+if(T==='sea'||T==='stream'){const x=Math.round(w*.55);[[0,0],[-1,1],[1,1],[-2,2],[2,2]].forEach(([dx,dy])=>P(g,x+dx,sb(x)-1+dy,'#e8904a'))}
+if(!cyl){const x=w-12;R(g,x,sb(x)-3,5,3,'#5a5a6a');R(g,x+1,sb(x)-4,3,1,'#7a7a8a')}}
+for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(!shp(st,x,y,w,h))g.clearRect(x,y,1,1);
+return aqInt[k]=c}
+function aqSignR(t){return{x:t.x+t.w-15,y:Math.min(t.y+t.h+4,AWY-12),w:14,h:9}}
+function buildRoom(ri){const k=ri+'_'+AH;if(aqStatic[k])return aqStatic[k];const rm=AQR[ri],c=mkc(AW,AH),g=c.getContext('2d'),r=rng(ri*11+2);
+grad(g,0,10,AW,AWY-10,[mix(rm.amb,'#000000',.3),rm.amb,mix(rm.amb,'#ffffff',.06)]);for(let x=0;x<AW;x+=24){R(g,x,10,1,AWY-14,mix(rm.amb,'#000000',.3));R(g,x+1,10,1,AWY-14,mix(rm.amb,'#ffffff',.06))}
+R(g,0,0,AW,10,'#0a0d16');R(g,0,9,AW,1,'#262c42');for(let x=16;x<AW;x+=48){R(g,x,5,10,4,'#34343e');R(g,x+2,9,6,1,'#f8e8b0')}
+R(g,0,AWY-4,AW,4,mix(rm.amb,'#ffffff',.12));R(g,0,AWY-4,AW,1,mix(rm.amb,'#ffffff',.22));
+for(let y=AWY;y<AH;y++){const k=y-AWY,row=Math.floor(k/6),tw=14+Math.floor(k/10);for(let x=0;x<AW;x++){const t=(Math.floor((x+row*7)/tw)+row)%2;P(g,x,y,k%6===0||(x+row*7)%tw===0?'#131826':t?'#21283c':'#1c2234')}}R(g,0,AWY,AW,1,'#3a4260');
+rm.tanks.forEach(t=>{const st=t.st||'box',ow=t.w+6,oh=t.h+6;for(let y=0;y<oh;y++)for(let x=0;x<ow;x++){const inO=shp(st,x,y,ow,oh),inI=shp(st,x-3,y-3,t.w,t.h);if(inO&&!inI)P(g,t.x-3+x,t.y-3+y,y<4?'#5a5a6a':x<3?'#3e3e4c':'#26262f')}
+if(st==='box'){R(g,t.x+8,t.y-7,t.w-16,3,'#1c1c26');R(g,t.x+8,t.y-5,t.w-16,1,'#dfe8ff')}
+if(st==='cyl'){R(g,t.x-4,t.y+t.h+2,t.w+8,5,'#2c2c38');R(g,t.x-4,t.y+t.h+2,t.w+8,1,'#5a5a6a');R(g,t.x-2,t.y-8,t.w+4,4,'#2c2c38');R(g,t.x-2,t.y-5,t.w+4,1,'#c8d4ff')}
+const sg=aqSignR(t);R(g,sg.x,sg.y,sg.w,sg.h,'#2a1a10');R(g,sg.x+1,sg.y+1,sg.w-2,sg.h-2,'#9a6a3a');R(g,sg.x+2,sg.y+2,sg.w-4,sg.h-4,'#f0e6d0');R(g,sg.x+3,sg.y+3,6,1,'#6a5a4a');R(g,sg.x+3,sg.y+5,8,1,'#b8a890')});
+const plant=(x,y)=>{R(g,x,y,8,8,'#5a4a5a');R(g,x,y,8,1,'#7a6a7a');for(let k=0;k<12;k++)P(g,x+4+Math.cos(k)*(2+k%3),y-2-k*.8,k%2?'#3e7a3a':'#5a9a4a')};plant(2,AWY-12);plant(AW-10,AWY-12);
+const by=AWY+Math.round((AH-AWY)*.55);R(g,AW/2-22,by,44,3,'#6a4a32');R(g,AW/2-22,by,44,1,'#8a6444');R(g,AW/2-20,by+3,2,6,'#3a2a1e');R(g,AW/2+18,by+3,2,6,'#3a2a1e');
+R(g,AW/2-14,AH-6,28,6,'#5a2a2a');R(g,AW/2-14,AH-6,28,1,'#7a3a3a');
+return aqStatic[k]=c}
+function aqEnter(ri,from){aqRoom=ri;aqAct=null;const y=from?clamp(aqChar.y,AWY+12,AH-4):AH-12;aqChar.x=aqChar.tx=from==='L'?18:from==='R'?AW-18:AW/2;aqChar.y=aqChar.ty=y;aqChar.face=0;aqSides();
+aqLive=AQR[ri].tanks.map(t=>{const ids=t.ids.filter(i=>aqAll||S.dex[i]),n=ids.length;t.lv=n?Math.min(5,Math.ceil(n/t.ids.length*5)):0;return ids.map((id,k)=>{const sp=fishSprite(id,false,fsc(FISH[id]));return{id,sc:fsc(FISH[id]),w:sp.width,h:sp.height,x:Math.random()*Math.max(1,t.w-sp.width-2)+1,y:3+(n>1?k/(n-1):.5)*Math.max(0,t.h-sp.height-12),dir:Math.random()<.5?1:-1,sp:(FISH[id].shape==='s'||FISH[id].shape==='j'?2:3)+Math.random()*5,ph:Math.random()*6}})});
+const e=$('#aqLabel');if(e){const ids=AQR[ri].tanks.flatMap(t=>t.ids);e.textContent=`${AQR[ri].n}（${ids.filter(i=>S.dex[i]).length}/${ids.length}）`}}
+function drawAq(g,t,dt){const rm=AQR[aqRoom];g.drawImage(buildRoom(aqRoom),0,0);
+rm.tanks.forEach((tk,ti)=>{const st=tk.st||'box';g.drawImage(tankInt(tk),tk.x,tk.y);g.save();g.beginPath();if(st==='box')g.rect(tk.x,tk.y+3,tk.w,tk.h-3);else g.rect(tk.x,tk.y,tk.w,tk.h);g.clip();
+g.globalCompositeOperation='lighter';g.fillStyle='rgba(255,255,255,.045)';for(let k=0;k<Math.ceil(tk.w/30);k++){const cx=tk.x+((k*37+t*5)%(tk.w+30))-15;g.beginPath();g.moveTo(cx,tk.y);g.lineTo(cx+6,tk.y);g.lineTo(cx+16,tk.y+tk.h);g.lineTo(cx+8,tk.y+tk.h);g.fill()}g.globalCompositeOperation='source-over';
+(aqLive[ti]||[]).forEach(f=>{const sp=fishSprite(f.id,false,f.sc),vy=FISH[f.id].shape==='s'||FISH[f.id].shape==='j';fishMove(f,tk,dt);
+const y=f.y+Math.sin(t*(vy?.9:3)+f.ph)*(vy?2:(f.rest>0?.3:.6)),dx=Math.round(tk.x+f.x),dy=Math.round(tk.y+y);f.sx=dx;f.sy=dy;g.save();if(f.dir<0){g.translate(dx*2+f.w,0);g.scale(-1,1)}g.drawImage(sp,dx,dy);g.restore()});
+for(let k=0;k<3;k++)P(g,tk.x+tk.w-6+Math.sin(t*3+k)*.8,tk.y+tk.h-8-((t*9+k*13)%(tk.h-12)),'rgba(255,255,255,.75)');
+if(tk.w>=120||tk.ids.length>=6){const nb=[0,0,1,1,2,3][tk.lv||0];for(let j=0;j<nb;j++){const bx=tk.x+Math.round(tk.w*[.3,.55,.8][j]),H2=tk.h-10;for(let k=0;k<7;k++){const yy=tk.y+tk.h-8-((t*(10+j*2)+k*H2/7)%H2),xx=bx+Math.sin(t*4+k+j)*1.2,sz=k%3===0?2:1;g.fillStyle='rgba(255,255,255,.65)';g.fillRect(Math.round(xx),Math.round(yy),sz,sz);if(sz===2)P(g,xx+1,yy,'rgba(255,255,255,.9)')}R(g,bx-2,tk.y+tk.h-7,5,2,'#5a5a64')}}
+if(st==='box')for(let x=0;x<tk.w;x++)if(Math.sin(x*.45+t*2)>.55)P(g,tk.x+x,tk.y+3,'rgba(255,255,255,.4)');
+g.restore();for(let k=0;k<Math.min(10,tk.h/4);k++)P(g,tk.x+3+k*.5,tk.y+6+k*2,'rgba(255,255,255,.2)');if(st==='cyl')R(g,tk.x+tk.w-5,tk.y+8,1,tk.h-16,'rgba(255,255,255,.18)');
+g.globalCompositeOperation='lighter';const wc=hex(THW[tk.t][1]).join(',');g.fillStyle=`rgba(${wc},.05)`;g.fillRect(tk.x-6,tk.y-6,tk.w+12,tk.h+12);g.fillStyle=`rgba(${wc},.06)`;g.fillRect(tk.x,AWY+1,tk.w,16);g.globalCompositeOperation='source-over'});
+g.save();g.globalAlpha=.13;g.translate(0,AWY*2+1);g.scale(1,-1);g.drawImage(g.canvas,0,AWY-50,AW,50,0,AWY-50,AW,50);g.restore();
+if(aqRoom===4){g.globalCompositeOperation='lighter';for(let i=0;i<16;i++){g.fillStyle='rgba(180,160,255,.5)';g.fillRect(Math.round((i*47+Math.sin(t*.5+i)*10)%AW),Math.round((i*31+t*4)%AWY),1,1)}g.globalCompositeOperation='source-over'}
+const C=aqChar,dx=C.tx-C.x,dy=C.ty-C.y,dist=Math.hypot(dx,dy),mv=dist>.8;if(mv){const s=Math.min(dist,42*dt);C.x+=dx/dist*s;C.y+=dy/dist*s;C.step+=dt;C.face=Math.abs(dy)>Math.abs(dx)&&dy>0?1:0}
+if(!aqFade&&C.y>AWY+4){if(C.x<=9)aqTrans(-1);else if(C.x>=AW-9)aqTrans(1)}
+rm.tanks.forEach(tk=>{const sg=aqSignR(tk);if(Math.abs(C.x-(sg.x+7))<22&&C.y<AWY+40){const b=Math.round(Math.sin(t*5)*1.5);R(g,sg.x+6,sg.y-9+b,2,5,'#ffcf4a');R(g,sg.x+6,sg.y-3+b,2,2,'#ffcf4a')}});
+R(g,Math.round(C.x)-5,Math.round(C.y),11,1,'rgba(0,0,0,.4)');sprC(g,!C.face,charPal(S.look2),Math.round(C.x)-5,Math.round(C.y)-18-(mv&&Math.floor(C.step*8)%2?1:0),S.look2,C.face&&(t%3.6)<.14);
+const ay=Math.round((AWY+AH)/2),ab=Math.floor(t*3)%2;for(let k=0;k<5;k++){R(g,3+k+ab,ay-k,1,k*2+1,'#ffcf4a');R(g,AW-4-k-ab,ay-k,1,k*2+1,'#ffcf4a')}
+if(aqFade){aqFade.t+=dt;const T2=aqFade.t;if(T2>=.25&&!aqFade.done){aqFade.done=true;const d=aqFade.d;aqEnter((aqRoom+d+5)%5,d>0?'L':'R')}g.fillStyle=`rgba(0,0,0,${T2<.25?T2/.25:Math.max(0,1-(T2-.25)/.25)})`;g.fillRect(0,0,AW,AH);if(T2>.5)aqFade=null}
+if(mapOpen){const mc=$('#mapcv');if(mc)drawMap(mc.getContext('2d'),t)}}
+const BOTTOM=['ナマズ','巨大オオナマズ','カジカ','ドジョウ','カワヨシノボリ','ハゼ','カレイ','ヒラメ','マゴチ','チョウザメ','巨大パンダウナギ'];
+function fishMove(f,tk,dt){const fi=FISH[f.id],sh=fi.shape,bot=BOTTOM.includes(fi.name),drift=sh==='s'||sh==='j',minX=1,maxX=Math.max(1,tk.w-f.w-1),minY=4,maxY=Math.max(4,tk.h-f.h-(tk.st==='cyl'?11:7));
+if(f.vx===undefined){f.vx=0;f.vy=0;f.tt=0;f.rest=0}
+if(f.tt<=0||(f.rest<=0&&Math.hypot(f.tx-f.x,f.ty-f.y)<1.5)){f.tt=2+Math.random()*4;f.rest=Math.random()<(bot?.5:drift?.3:.2)?1+Math.random()*(bot?4:2):0;
+const nx=f.x+(Math.random()-.5)*(maxX-minX)*.9;f.tx=clamp(nx,minX,maxX);f.ty=bot?maxY-Math.random()*Math.min(6,maxY-minY):clamp(f.y+(Math.random()-.5)*(maxY-minY)*.8,minY,maxY);
+f.spd=drift?1.5+Math.random()*2:(bot?2.5:5)+Math.random()*(bot?3:8)*(f.sc<.5?1.4:1);if(!bot&&!drift&&Math.random()<.1)f.spd*=2.4}
+f.tt-=dt;if(f.rest>0){f.rest-=dt;const k=Math.pow(.15,dt);f.vx*=k;f.vy*=k}else{const dx=f.tx-f.x,dy=f.ty-f.y,d=Math.hypot(dx,dy)||1,ease=Math.min(1,d/6),ax=dx/d*f.spd*ease,ay=dy/d*f.spd*ease*(drift?1:.55),k=Math.min(1,dt*(drift?.8:1.8));f.vx+=(ax-f.vx)*k;f.vy+=(ay-f.vy)*k}
+f.x=clamp(f.x+f.vx*dt,minX,maxX);f.y=clamp(f.y+f.vy*dt,minY,maxY);if(f.vx>.5)f.dir=1;else if(f.vx<-.5)f.dir=-1}
+function aqTap(e){const rc=e.target.getBoundingClientRect(),wx=(e.clientX-rc.left)/rc.width*AW,wy=(e.clientY-rc.top)/rc.height*AH,rm=AQR[aqRoom],stand=tk=>({x:clamp(tk.x+tk.w/2,10,AW-10),y:AWY+14});
+if(aqFade)return;for(const tk of rm.tanks){const sg=aqSignR(tk);if(wx>=sg.x-3&&wx<=sg.x+sg.w+3&&wy>=sg.y-3&&wy<=sg.y+sg.h+3){plaque(tk.ids,0);return}}
+for(let ti=0;ti<rm.tanks.length;ti++){const tk=rm.tanks[ti];for(const f of aqLive[ti]||[])if(wx>=f.sx-2&&wx<=f.sx+f.w+2&&wy>=f.sy-2&&wy<=f.sy+f.h+2){plaque(tk.ids,tk.ids.indexOf(f.id));return}
+if(wx>=tk.x&&wx<=tk.x+tk.w&&wy>=tk.y&&wy<=tk.y+tk.h){const fi=tk.ids.findIndex(i=>aqAll||S.dex[i]);plaque(tk.ids,Math.max(0,fi));return}}
+aqChar.tx=clamp(wx,6,AW-6);aqChar.ty=clamp(wy,AWY+12,AH-4)}
+let aqFade=null,aqPQ=null,mapOpen=false;
+const MAPC=[[0,1],[0,0],[1,0],[2,0],[2,1]];
+function aqTrans(d){if(aqFade)return;aqFade={t:0,d,done:false}}
+function aqSides(){const l=$('#aqL'),r=$('#aqR');if(!l)return;l.textContent='◀ '+AQR[(aqRoom+4)%5].n;r.textContent=AQR[(aqRoom+1)%5].n+' ▶'}
+function plaque(ids,i){aqPQ={ids,i};const id=ids[i],f=FISH[id],c=S.dex[id],k=c||aqAll,s=SPOTS[f.spot];
+modal(`<div style="text-align:center"><p class="muted" style="margin:0">${AQR[aqRoom].n}</p><img class="sprite l" src="${fishURL(id,!k)}" alt=""><h2 style="justify-content:center;font-size:22px;margin:0">${k?f.name:'？？？'}</h2><div class="star">${stars(f.r)}</div></div>
+<dl><dt>生息地</dt><dd>${s.name}</dd><dt>出現時間</dt><dd>${[...f.times].map(t=>t==='夕'?'夕方':t).join('・')}</dd><dt>大きさ</dt><dd>${f.min}〜${f.max}cm</dd>${c?`<dt>初回捕獲日</dt><dd>${c.first}日目</dd><dt>最大サイズ</dt><dd>${c.max}cm</dd>`:'<dt>状態</dt><dd>まだ釣っていない</dd>'}</dl>
+<p style="margin:6px 0">${k?f.desc:'釣り上げると説明が読めます。'}</p>
+${ids.length>1?`<div style="display:grid;grid-template-columns:70px minmax(0,1fr) 70px;gap:8px;align-items:center;margin:8px 0"><button class="wb" data-act="pq" data-v="-1" aria-label="前の魚">◀</button><span style="text-align:center">${i+1} / ${ids.length}</span><button class="wb" data-act="pq" data-v="1" aria-label="次の魚">▶</button></div>`:''}
+<button class="wb big" data-act="close">閉じる</button>`)}
+function drawMap(g,t){const W=165,H=112;R(g,0,0,W,H,'#e8d6a8');for(let i=0;i<120;i++)P(g,(i*53)%W,(i*29)%H,'#dcc896');R(g,0,0,W,1,'#8a6a3a');R(g,0,H-1,W,1,'#8a6a3a');R(g,0,0,1,H,'#8a6a3a');R(g,W-1,0,1,H,'#8a6a3a');
+const cell=(c,r)=>({x:5+c*53,y:6+r*52,w:49,h:44});
+const corr=(a,b)=>{const A=cell(...a),B=cell(...b);if(a[1]===b[1])R(g,A.x+A.w,A.y+16,B.x-A.x-A.w,10,'#b89a66');else R(g,A.x+18,A.y+A.h,12,B.y-A.y-A.h,'#b89a66')};
+corr([0,0],[1,0]);corr([1,0],[2,0]);corr([0,0],[0,1]);corr([2,0],[2,1]);corr([0,1],[1,1]);corr([1,1],[2,1]);
+const L=cell(1,1);R(g,L.x,L.y,L.w,L.h,'#6a4a32');R(g,L.x+1,L.y+1,L.w-2,L.h-2,'#c8a878');R(g,L.x+18,L.y+L.h-12,13,12,'#5a3a22');R(g,L.x+19,L.y+L.h-11,11,11,'#2a4a54');R(g,L.x+6,L.y+6,10,5,'#9a6a3a');R(g,L.x+33,L.y+6,10,5,'#9a6a3a');
+AQR.forEach((rm,ri)=>{const C=cell(...MAPC[ri]),cur=ri===aqRoom;R(g,C.x,C.y,C.w,C.h,cur&&Math.floor(t*3)%2?'#ffcf4a':'#3a2a1a');R(g,C.x+1,C.y+1,C.w-2,C.h-2,ri===4?'#2a2048':'#26304a');R(g,C.x+1,C.y+C.h-12,C.w-2,11,'#1e2436');
+rm.tanks.forEach((tk,ti)=>{const x=C.x+2+Math.round(tk.x*(C.w-4)/192),y=C.y+3+Math.round((tk.oy-26)*26/180),w=Math.max(3,Math.round(tk.w*(C.w-4)/192)),h=Math.max(4,Math.round(tk.oh*26/180)),wc=THW[tk.t];
+R(g,x-1,y-1,w+2,h+2,'#14141c');grad(g,x,y,w,h,[wc[0],wc[2]]);R(g,x,y,w,1,'#ffffff');
+tk.ids.forEach((id,k)=>{if(!(aqAll||S.dex[id]))return;const f=FISH[id],fx=x+1+((k*7+Math.floor(t*4+k))%Math.max(1,w-2)),fy=y+2+(k*5)%Math.max(1,h-3);P(g,fx,fy,f.c1);if(w>8)P(g,fx+1,fy,f.c2)})});
+if(cur){const px=C.x+C.w/2,py=C.y+2+Math.round(Math.sin(t*5)*1.5);R(g,px-3,py,7,6,'#2a1010');R(g,px-2,py+1,5,4,'#e04a3a');P(g,px-1,py+1,'#ff9a8a');R(g,px-1,py+6,3,2,'#2a1010');P(g,px,py+8,'#2a1010');R(g,px-2,py+2,1,1,'#ff9a8a')}})}
+function aqMapOpen(){const m=$('#aqMap');if(!m)return;mapOpen=true;const cnt=r=>{const ids=r.tanks.flatMap(t=>t.ids);return`${ids.filter(i=>S.dex[i]).length}/${ids.length}`};
+const cellPct=(c,r)=>`left:${(5+c*53)/165*100}%;top:${(6+r*52)/112*100}%;width:${49/165*100}%;height:${44/112*100}%`;
+m.style.display='flex';m.innerHTML=`<div class="panel" style="width:100%;margin:0"><h2>${ico('map',1)}館内マップ</h2>
+<div style="position:relative;margin:6px 0"><canvas id="mapcv" width="165" height="112" style="width:100%;display:block;image-rendering:pixelated" aria-label="館内の地図"></canvas>
+${AQR.map((r,i)=>`<button data-act="aqgo" data-v="${i}" aria-label="${r.n}へ移動" style="position:absolute;${cellPct(...MAPC[i])};background:none;border:0;padding:0;cursor:pointer;display:flex;align-items:flex-end;justify-content:center"><span style="background:rgba(30,20,10,.82);color:#fff3d6;font:inherit;font-size:13px;line-height:1.2;padding:1px 4px;margin-bottom:2px;white-space:nowrap">${i===aqRoom?'★':''}${r.n.replace('のゾーン','').replace('池と湖の','')}<br>${i===aqRoom?'現在地':cnt(r)}</span></button>`).join('')}
+<span style="position:absolute;${cellPct(1,1)};display:flex;align-items:flex-start;justify-content:center;font-size:13px;color:#3b2414;pointer-events:none;padding-top:14px">入口</span></div>
+<p class="muted" style="margin:0 0 8px">現在地：${AQR[aqRoom].n}。部屋をタップすると移動します。</p>
+<button class="wb big" data-act="aqmapclose">閉じる</button></div>`}
+/* ---- 水中ミニゲーム ---- */
+const MW=160,MCX=80,MS=1.6;let MH=196,MCY=100;const miniC={};
+const UWC=[['#78c4a0','#4e9c7c','#327a5e','#1e5642','#123a2c'],['#70c0dc','#4a9cbc','#2e7a9c','#1c587a','#103a56'],['#a0e2f2','#6ec6e2','#46a6c8','#2c84a8','#1a6286'],['#5a96d0','#3a72b2','#265694','#183c72','#0e2650'],['#4aa8e0','#2a84c4','#1a62a2','#10447e','#082a58'],['#6aaab0','#4a8a94','#2e6a78','#1e4c5a','#12323e'],['#3a7ac8','#2458a6','#163e82','#0c285e','#06183e']];
+function miniBg(si){const mk=si+'_'+MH;if(miniC[mk])return miniC[mk];const c=mkc(MW,MH),g=c.getContext('2d'),cl=UWC[si],r=rng(si*17+3);grad(g,0,0,MW,MH,cl);
+for(let x=0;x<MW;x++)if(r()<.5)P(g,x,1+Math.round(Math.sin(x*.3)*1),mix(cl[0],'#ffffff',.5));
+const far=mix(cl[3],cl[1],.35);for(let x=0;x<MW;x++){const y=Math.round(MH-46+Math.sin(x*.05+si)*10+Math.sin(x*.17)*4);R(g,x,y,1,MH-y,far)}
+const near=mix(cl[4],'#000000',.25);for(let x=0;x<MW;x++){const y=Math.round(MH-20+Math.sin(x*.09+si*2)*6+Math.sin(x*.31)*2);R(g,x,y,1,MH-y,near)}
+if(si===4){[[24,MH-26],[132,MH-30]].forEach(([x0,y0])=>{for(let k=0;k<6;k++){const dx=(k-2.5)*3;for(let y=0;y<14+k%3*4;y++)P(g,x0+dx+Math.sin(y*.4+k)*1,y0-y,mix(near,'#a04060',.35))}})}
+else for(let k=0;k<7;k++){const x=6+k*24+(k*7)%9,h=20+(k*13)%24;for(let y=0;y<h;y++)P(g,x+Math.round(Math.sin(y*.25+k)*1.5),MH-20-y+(k%2)*4,mix(near,'#3a6a3a',.3))}
+return miniC[mk]=c}
+function disc(g,cx,cy,r,col){g.fillStyle=col;for(let y=-r;y<=r;y++){const w=Math.round(Math.sqrt(r*r-y*y));g.fillRect(Math.round(cx-w),Math.round(cy+y),w*2+1,1)}}
+function drawMini(g,t){if(!F)return;const si=F.spot;g.drawImage(miniBg(si),0,0);
+g.globalCompositeOperation='lighter';for(let k=0;k<4;k++){const x=20+k*38+Math.sin(t*.5+k)*8;g.fillStyle='rgba(255,255,255,.05)';g.beginPath();g.moveTo(x,0);g.lineTo(x+12,0);g.lineTo(x+40,MH);g.lineTo(x+18,MH);g.fill()}g.globalCompositeOperation='source-over';
+for(let k=0;k<26;k++){const x=(k*53+Math.sin(t*.4+k)*6)%MW,y=(k*37+t*(2+k%3))%MH;P(g,x,y,'rgba(255,255,255,.25)')}
+const Rr=16*(1+S.eq.reel*0.06)*MS;disc(g,MCX,MCY,Rr,'rgba(200,230,255,.2)');disc(g,MCX,MCY,Rr*.65,'rgba(8,24,60,.22)');disc(g,MCX,MCY,Rr*.3,'rgba(200,230,255,.3)');
+if(F.phase==='play'){const dir=(F.vx||1)>0?1:-1,th=F.thr>0,jx=th?Math.round(Math.sin(t*40)*1.5):0,jy=th?Math.round(Math.cos(t*33)):Math.round(Math.sin(t*6)*.6);
+const mx=MCX+(F.x-CX)*MS+jx,my=MCY+(F.y-CY)*MS+jy,sp=fishSprite(1,true),w=48,h=30;
+const ox=Math.round(mx-w/2),oy=Math.round(my-h/2);line(g,MW-30,0,mx+dir*18,my-1,0,'rgba(20,20,30,.75)');
+g.save();g.imageSmoothingEnabled=false;g.globalAlpha=.92;if(dir<0){g.translate(ox*2+w,0);g.scale(-1,1)}g.drawImage(sp,ox,oy,w,h);g.restore();
+if(th)for(let k=0;k<8;k++)P(g,mx+Math.cos(k*.8+t*25)*(26+k%3*2),my+Math.sin(k*.8+t*25)*14,'#ffffff');
+if(F.rip>0){F.rip-=1/60;const rr=(0.4-F.rip)*80;for(let a=0;a<6.28;a+=.15)P(g,MCX+Math.cos(a)*rr,MCY+Math.sin(a)*rr,'rgba(255,255,255,.7)')}}
+for(let k=0;k<6;k++){const y=MH-((t*14+k*33)%MH);P(g,MW-20+Math.sin(t*3+k)*2,y,'rgba(255,255,255,.7)');P(g,14+Math.sin(t*2+k)*2,(y+90)%MH,'rgba(255,255,255,.5)')}}
+function vMini(){view.innerHTML=`<div id="fsBox" style="position:relative;height:100%;overflow:hidden;background:#0c0f18">
+<canvas id="cv" style="width:100%;display:block;image-rendering:pixelated;touch-action:manipulation" aria-label="水中で暴れる魚。中心に来たらタップ"></canvas>
+<div style="position:absolute;left:6px;right:6px;top:6px;display:flex;align-items:center;gap:6px;pointer-events:none">${ico('rod')}<div class="gauge" style="flex:1;margin:0" aria-label="釣りゲージ"><i id="gbar" style="width:${F.g}%"></i><b id="gtxt"></b></div></div>
+<div id="fb"></div><div style="position:absolute;left:0;right:0;bottom:14px;text-align:center;pointer-events:none"><span class="pill" style="display:inline-flex;font-size:18px;padding:4px 16px">中心にきたらタッチ！</span></div></div>`;
+const cv=$('#cv'),bx=$('#fsBox');cv.width=MW;MH=Math.max(196,Math.floor(bx.clientHeight*MW/bx.clientWidth));cv.height=MH;MCY=Math.round(MH*.5);cvMode='mini'}
+function vCooler(){const inv=S.inv,val=inv.reduce((s,c)=>s+priceOf(FISH[c.id],c.size),0);
+view.innerHTML=`<div class="panel"><h2>${ico('bag',1)}クーラーボックス</h2>${inv.length?`<p>${inv.length}匹・全部売ると <b style="font-weight:400;font-size:20px">${val.toLocaleString()}</b> コイン</p>
+<button class="wb big gold" data-act="sellall" style="margin:6px 0 10px">${ico('coin')}全部売る</button>
+<div class="grid">${inv.map((c,i)=>`<div class="cell" style="cursor:default"><img class="sprite" src="${fishURL(c.id)}" alt="">${FISH[c.id].name}<span class="muted">${c.size}cm</span><button class="wb sm gold" data-act="sellone" data-v="${i}" style="width:100%">${priceOf(FISH[c.id],c.size)}</button></div>`).join('')}</div>`
+:'<p class="muted">まだ魚が入っていません。釣った魚を「クーラーへ」入れると、ここに入ります。</p>'}</div>
+<button class="wb big" data-act="go" data-v="home">ホームへ戻る</button>`}
+/* ---- 釣り場マップ（斜め上から見た島） ---- */
+const IW=160,GW=160,GH=150;let IH=300,isl=null,islSel=-1;
+const ISEED=[[-.42,.42],[-.22,-.02],[0,-.58],[.5,-.08],[.3,.66],[.82,.34]];
+function buildGround(){const cx=80,cy=75,R0=64,W=GW,H=GH,seeds=ISEED.map(([a,b])=>[Math.round(cx+a*R0),Math.round(cy+b*R0*1.1)]),c=mkc(W,H),g=c.getContext('2d'),reg=new Int8Array(W*H).fill(-1),shore=new Float32Array(W*H),wat=new Uint8Array(W*H);
+const rad=a=>R0*(1+.1*Math.sin(3*a+1)+.07*Math.sin(5*a+2)+.05*Math.sin(9*a+.5)+.03*Math.sin(14*a));
+for(let y=0;y<H;y++)for(let x=0;x<W;x++){const dx=x-cx,dy=(y-cy)/1.12,d=Math.hypot(dx,dy),a=Math.atan2(dy,dx),sd=rad(a)-d;shore[y*W+x]=sd;if(sd<0)continue;
+const wx=x+Math.sin(y*.15)*4,wy=y+Math.cos(x*.13)*4;let best=0,bd=1e9;seeds.forEach(([sx,sy],i)=>{const q=(wx-sx)**2+(wy-sy)**2*(i===4?.7:i===5?1.3:1);if(q<bd){bd=q;best=i}});if(y>cy+R0*.25&&sd<7&&best!==2&&best!==5)best=4;reg[y*W+x]=best}
+const C=[['#8cc860','#7ab850','#a0d870'],['#3e7a3e','#2e6232','#4e8a46'],['#6a8a5a','#5a7a4e','#7a9a66'],['#9acc68','#88bc58','#aad878'],['#8cc060','#7ab050','#9cd070'],['#a8a89a','#96968a','#b8b4a4']];
+for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=reg[y*W+x];if(i<0)continue;const h=hsh(x,y),sd=shore[y*W+x];let col=C[i][h%5===0?1:h%7===0?2:0];if(i===4&&sd<6)col=h%6===0?'#d8c48a':'#e8d49a';if(sd<1.5)col='#f0e2b0';P(g,x,y,col)}
+const water=(x0,y0,rx,ry,c1,c2)=>{for(let y=-ry;y<=ry;y++)for(let x=-rx;x<=rx;x++){const q=(x/rx)**2+(y/ry)**2+.12*Math.sin(x*.7+y);if(q<=1){P(g,x0+x,y0+y,q>.75?c2:((x+y*3)%11===0?'#9ae0f4':c1));wat[(y0+y)*W+x0+x]=1}}};
+const [pS,fS,sS,lS,cS]=seeds;let px=sS[0],py=sS[1]+8;const tx=cx-R0*1.1,ty=fS[1]+6;
+for(let k=0;k<160;k++){const q=k/160,mx=Math.round(px+(fS[0]-px)*Math.min(1,q*2)+(q>.5?(tx-fS[0])*(q-.5)*2:0)),my=Math.round(py+(fS[1]-py)*Math.min(1,q*2)+(q>.5?(ty-fS[1])*(q-.5)*2:0)+Math.sin(q*18)*2);if(shore[my*W+mx]<0)break;R(g,mx,my,2,2,'#5ab0d8');wat[my*W+mx]=wat[my*W+mx+1]=wat[(my+1)*W+mx]=1}
+water(lS[0],lS[1]+2,15,9,'#4aa0d0','#78c0e0');water(pS[0]+4,pS[1]-2,6,3,'#5ab0d8','#88cce8');
+for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const i=reg[y*W+x];if(i<0)continue;const j=reg[y*W+x+1],k=reg[(y+1)*W+x];if((j>=0&&j!==i)||(k>=0&&k!==i))if((x+y)%2===0)P(g,x,y,'rgba(255,255,240,.6)')}
+const hgt=new Float32Array(W*H);for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;if(reg[i]<0)continue;let h=3;const dm=Math.hypot(x-sS[0],(y-sS[1])*1.2);h+=42*Math.pow(Math.max(0,1-dm/32),1.6)+Math.max(0,1-dm/30)*3*Math.sin(x*.9+y*.7);
+if(reg[i]===1)h+=1.5+Math.sin(x*.4)*Math.cos(y*.5);if(shore[i]<2)h=Math.min(h,2+shore[i]*.5);if(wat[i])h=Math.min(h,2.2);hgt[i]=h}
+return{c,g,reg,shore,wat,hgt,seeds,cx,cy,R0}}
+function buildIsland(){const G0=buildGround(),W=IW,H=IH,c=mkc(W,H),g=c.getContext('2d'),HZ=Math.round(H*.2),y0=HZ+10,y1=H-96,K=(y1-y0)/GH,sreg=new Int8Array(W*H).fill(-1),tex=G0.g.getImageData(0,0,GW,GH).data;
+grad(g,0,0,W,HZ,['#5a9ad8','#8cc0ec','#cde6f6']);grad(g,0,HZ,W,H-HZ,['#9ad0ec','#4a98d0','#2a6aa8','#1e5288']);
+for(let x=0;x<W;x++){if(x>14&&x<40){const h=Math.round(3-Math.abs(x-27)*.22);if(h>0)R(g,x,HZ-h,1,h,'#7a9ab8')}if(x>120&&x<150){const h=Math.round(5-Math.abs(x-135)*.33);if(h>0)R(g,x,HZ-h,1,h,'#86a4c0')}}R(g,0,HZ,W,1,'#e8f4fa');
+const proj=(u,v,h)=>{const s=.72+.28*v/GH;return[Math.round(80+(u-80)*s),Math.round(y0+v*K-h)]};
+const H0=(u,v)=>{if(u<0||v<0||u>=GW||v>=GH)return 0;return G0.hgt[v*GW+u]};
+for(let v=0;v<GH;v++)for(let u=0;u<GW;u++){const i=v*GW+u,rg=G0.reg[i],sd=G0.shore[i];
+if(rg<0){if(sd>-3){const[sx,sy]=proj(u,v,0);P(g,sx,sy,sd>-1.5?'#bfe8f4':'#8ad4ee')}continue}
+const h=G0.hgt[i],[sx,syTop]=proj(u,v,h),[,syB]=proj(u,v,0);let col=`rgb(${tex[i*4]},${tex[i*4+1]},${tex[i*4+2]})`;
+if(!G0.wat[i]){if(h>30)col=hsh(u,v)%4===0?'#e8eef4':'#f6f9fc';else if(h>19)col=hsh(u,v)%3===0?'#8a867c':'#9a968a';else if(h>9&&G0.reg[i]===2)col=hsh(u,v)%3===0?'#5a7a4a':'#6a8a56';const sl=(h-H0(u-1,v))+(h-H0(u,v-1));if(sl>.8)col=mix(col,'#ffffff',.18);else if(sl<-.8)col=mix(col,'#000000',.2)}
+const nIn=v+1<GH&&G0.reg[(v+1)*GW+u]>=0,nTop=nIn?proj(u,v+1,G0.hgt[(v+1)*GW+u])[1]:syB+2,dcol=nIn?mix(col,'#000000',.14):(h>8?'#6a665e':'#7a5a3a');for(let y=syTop+1;y<=Math.max(syTop,nTop);y++){P(g,sx,y,!nIn&&y>syB?'#5a3a20':dcol);sreg[y*W+sx]=rg}P(g,sx,syTop,col);sreg[syTop*W+sx]=rg;if(.72+.28*v/GH>.86){P(g,sx+1,syTop,col);sreg[syTop*W+sx+1]=rg}}
+const r=rng(9),trees=[];for(let k=0;k<260;k++){const u=Math.floor(r()*GW),v=Math.floor(r()*GH),i=v*GW+u,rg=G0.reg[i];if(rg<0||G0.wat[i]||G0.shore[i]<3)continue;if(rg===1||(rg===2&&G0.hgt[i]<14&&r()<.7)||((rg===0||rg===3)&&r()<.12))trees.push([u,v])}
+trees.sort((a,b)=>a[1]-b[1]).forEach(([u,v])=>{const[sx,sy]=proj(u,v,G0.hgt[v*GW+u]),hh=4+Math.floor(hsh(u,v)%3);for(let k=0;k<hh;k++){const w=Math.floor(k*.5);R(g,sx-w,sy-hh+k,w*2+1,1,k===0?'#3e7a46':'#2a5a34');P(g,sx-w,sy-hh+k,'#4e8a4a')}P(g,sx,sy,'#3a2a1a')});
+const[ps,pt]=proj(G0.seeds[0][0]-10,G0.seeds[0][1]+3,3);R(g,ps,pt-4,6,4,'#d9a441');P(g,ps+2,pt-5,'#d9a441');R(g,ps+2,pt-2,2,2,'#3a2616');
+const[ws,wt]=proj(G0.seeds[2][0],G0.seeds[2][1]+8,G0.hgt[(G0.seeds[2][1]+8)*GW+G0.seeds[2][0]]);
+const[cs,ct]=proj(G0.seeds[4][0]+10,G0.seeds[4][1]+6,2);R(g,cs,ct,9,1,'#8a6040');
+const hs=G0.seeds[5],hp=[];for(let k=0;k<26;k++){const u=Math.round(hs[0]-12+(k*7)%22),v=Math.round(hs[1]-10+(k*5)%20),i=v*GW+u;if(G0.reg[i]===5&&G0.shore[i]>2)hp.push([u,v])}
+hp.sort((a,b)=>a[1]-b[1]).forEach(([u,v],k)=>{const[sx,sy]=proj(u,v,G0.hgt[v*GW+u]);R(g,sx-2,sy-3,5,3,k%3?'#e8e0d0':'#c8c0b0');R(g,sx-2,sy-5,5,2,['#c84a3a','#3a6ab8','#5a8a4a'][k%3]);P(g,sx,sy-2,'#5a7aa0')});
+for(let k=0;k<3;k++){const v=hs[1]-6+k*8;let u=hs[0];while(u<GW-1&&G0.shore[v*GW+u]>=0)u++;const[sx,sy]=proj(u,v,1);R(g,sx-1,sy,8,1,'#8a8a86');R(g,sx+3+k,sy+2,4,2,['#e8e8f0','#c84a3a','#3a6ab8'][k]);R(g,sx+3+k,sy+1,2,1,'#e8e8f0')}
+const ox=128,oy=HZ+15;for(let y=HZ+3;y<HZ+30;y++)for(let x=96;x<W;x++){if(sreg[y*W+x]>=0)continue;if(((x-ox)/30)**2+((y-oy)/11)**2<=1)sreg[y*W+x]=6}
+for(let a=0;a<6.28;a+=.06){const x=Math.round(ox+Math.cos(a)*30),y=Math.round(oy+Math.sin(a)*11);if(x<W&&sreg[y*W+x]===6&&Math.floor(a*20)%2===0)P(g,x,y,'rgba(255,255,255,.6)')}
+const edge=[[],[],[],[],[],[],[]];for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const i=sreg[y*W+x];if(i<0)continue;if(sreg[y*W+x+1]!==i||sreg[y*W+x-1]!==i||sreg[(y+1)*W+x]!==i||sreg[(y-1)*W+x]!==i)edge[i].push(x,y)}
+const pins=G0.seeds.map(([u,v])=>proj(u,v,G0.hgt[v*GW+u]));pins.push([128,HZ+19]);
+return isl={c,reg:sreg,edge,pins,H,HZ,wf:[ws,wt],K,y0}}
+function islDark(){const k='d'+IH+JSON.stringify(S.unl)+DEV();if(isl&&isl.dk===k)return isl.dc;const c=mkc(IW,IH),g=c.getContext('2d');for(let y=0;y<IH;y++)for(let x=0;x<IW;x++){const i=isl.reg[y*IW+x];if(i>=0&&(SPOTS[i].soon||!(S.unl[SPOTS[i].id]||DEV()))&&(x+y)%2===0)P(g,x,y,SPOTS[i].soon?'rgba(20,20,40,.28)':'rgba(20,20,40,.4)')}isl.dk=k;isl.dc=c;return c}
+function drawIsland(g,t){if(!isl||isl.H!==IH)buildIsland();g.drawImage(isl.c,0,0);g.drawImage(islDark(),0,0);
+[[20,8,16],[90,16,10],[130,6,13]].forEach(([x0,y,w],i)=>{const x=((x0+t*(1.5+i*.5))%(IW+40))-20;R(g,x,y,w,2,'#ffffff');R(g,x+3,y-1,w-6,1,'#ffffff');R(g,x+1,y+2,w-2,1,'#e0eef8')});
+for(let i=0;i<30;i++){const x=(i*47+Math.floor(t*2)*(i%3+1))%IW,y=isl.HZ+2+(i*71)%(IH-isl.HZ-2);if(isl.reg[y*IW+x]<0&&Math.sin(t*2+i)>.55)R(g,x,y,2,1,'rgba(255,255,255,.7)')}
+const[wx,wy]=isl.wf;for(let k=0;k<5;k++)P(g,wx,wy-6+((t*12+k*2)%7),'#ffffff');P(g,wx+1,wy-3,'#cfe8f8');
+if(islSel>=0&&Math.floor(t*3)%2===0){const e=isl.edge[islSel];g.fillStyle='#ffd84a';for(let k=0;k<e.length;k+=2)g.fillRect(e[k],e[k+1],1,1)}
+isl.pins.forEach(([x,y],i)=>{if(i===6){const bb=Math.round(Math.sin(t*2)*1);R(g,x-1,y-6+bb,3,5,'#e04a3a');R(g,x-1,y-4+bb,3,1,'#ffffff');R(g,x-2,y-1+bb,5,2,'#e04a3a');P(g,x,y-7+bb,'#fff6c0');return}const u=!SPOTS[i].soon&&(S.unl[SPOTS[i].id]||DEV());R(g,x,y-8,1,8,'#5a3a22');R(g,x+1,y-8,5,4,u?'#e04a3a':'#6a6a74');P(g,x+1,y-8,u?'#ff8a7a':'#9a9aa4');if(!u){R(g,x-2,y-2,5,4,'#c8a040');R(g,x-1,y-4,3,2,'#8a6a20');P(g,x,y-1,'#3a2a10')}});
+const cur=S.lastSpot||0,[qx,qy]=isl.pins[cur],bb=Math.round(Math.sin(t*4)*1.5);sprC(g,false,charPal(S.look2),qx-13,qy-18+bb,S.look2,(t%3)<.12)}
+function islPanel(){const e=$('#islPanel');if(!e)return;if(islSel<0){e.style.display='none';return}const i=islSel,s=SPOTS[i],u=S.unl[s.id]||DEV(),got=FISH.filter(f=>f.spot===i&&S.dex[f.i]).length;if(s.soon){e.style.display='block';e.innerHTML=`<h2 style="margin:0 0 4px">${s.name} <span class="tag" style="background:#6a6a74">準備中</span></h2><p class="muted" style="margin:0 0 8px">${s.desc}・適正パワー ${s.rec}。アップデートで追加予定です。</p>${DEV()?`<button class="wb big" data-act="fish" data-v="${i}">景色をプレビュー（開発）</button>`:''}`;return}
+e.style.display='block';e.innerHTML=`<h2 style="margin:0 0 4px"><span class="mk">${mark(s.rec)}</span>${s.name}${i===(S.lastSpot||0)?' <span class="tag" style="background:#4a7ad0">現在地</span>':''}</h2>
+<p class="muted" style="margin:0 0 8px">${s.desc}・適正パワー ${s.rec}・図鑑 ${got}/10</p>
+${u?`<button class="wb big gold" data-act="fish" data-v="${i}">${ico('rod')}ここへ移動して釣る</button>`:`<button class="wb big gold" data-act="unlock" data-v="${i}">${ico('coin')}${s.cost.toLocaleString()} コインで解放</button>`}`}
+function islTap(e){const rc=e.target.getBoundingClientRect(),x=Math.floor((e.clientX-rc.left)/rc.width*IW),y=Math.floor((e.clientY-rc.top)/rc.height*IH);if(!isl)return;const i=isl.reg[y*IW+x];islSel=i>=0?i:-1;if(i>=0)se('tap');islPanel()}
+function vSpots(){view.innerHTML=`<div id="islBox" style="position:relative;height:100%;overflow:hidden;background:#1e5a9a">
+<canvas id="cv" style="width:100%;display:block;image-rendering:pixelated;touch-action:manipulation" aria-label="釣り場の島の地図。区画をタップすると詳細が出ます"></canvas>
+<div class="pill" style="position:absolute;left:6px;top:4px;font-size:14px">${ico('map',1)}釣り場マップ</div><div class="pill" style="position:absolute;right:6px;top:4px;font-size:13px">釣りパワー ${power()}</div>
+<div id="islTags"></div><div id="islPanel" class="panel" style="position:absolute;left:8px;right:8px;bottom:6px;margin:0;display:none"></div></div>`;
+const cv=$('#cv'),bx=$('#islBox');cv.width=IW;IH=Math.max(260,Math.floor(bx.clientHeight*IW/bx.clientWidth));cv.height=IH;if(!isl||isl.H!==IH)buildIsland();
+$('#islTags').innerHTML=isl.pins.map(([x,y],i)=>`<span style="position:absolute;left:${(x+3)/IW*100}%;top:${(y+1)/IH*100}%;transform:translateX(-50%);background:rgba(30,20,10,.78);color:#fff3d6;font-size:13px;padding:0 4px;white-space:nowrap;pointer-events:none">${SPOTS[i].name}${SPOTS[i].soon?'（準備中）':S.unl[SPOTS[i].id]||DEV()?'':'（未開放）'}</span>`).join('');
+if(islSel<0)islSel=S.lastSpot||0;islPanel();cvMode='island'}
+function vQuests(){view.innerHTML=`<div class="panel"><h2>${ico('note',1)}デイリー釣り依頼（${S.day}日目）</h2>${questRows()}<p class="muted" style="margin-top:8px">寝て翌日になると、新しい依頼に入れ替わります。未達成の依頼は持ち越せません。</p></div><button class="wb big" data-act="go" data-v="home">ホームへ戻る</button>`}
+let FOFF=0;
+function vFishing(){const s=SPOTS[F.spot];view.innerHTML=`<div id="fsBox" style="position:relative;height:100%;overflow:hidden;background:#0c0f18">
+<canvas id="cv" style="width:100%;display:block;image-rendering:pixelated" aria-label="釣り場の景色"></canvas>
+<div class="pill" style="position:absolute;left:6px;top:4px;font-size:14px"><span>${mark(s.rec)}</span>${s.name}</div>
+<div class="pill" style="position:absolute;right:6px;top:4px;font-size:13px">パワー ${power()}/${s.rec}</div>
+<div id="fb"></div><div id="fctl" style="position:absolute;left:8px;right:8px;bottom:8px"></div></div>`;
+const cv=$('#cv'),bx=$('#fsBox');cv.width=FW;const h=Math.max(FH,Math.floor(bx.clientHeight*FW/bx.clientWidth));cv.height=h;FOFF=Math.max(0,h-FH-Math.round(150*FW/bx.clientWidth));cvMode='fish';fishCtl()}
+function fishCtl(){const e=$('#fctl');if(!e)return;const p=F.phase,msg=t=>`<div style="text-align:center"><span class="pill" style="display:inline-flex;font-size:16px;padding:2px 12px">${t}</span></div>`;
+e.innerHTML=p==='idle'||p==='done'?`<button class="wb big gold" data-act="cast">${ico('rod')}キャストする（30分経過）</button><div class="btns" style="margin:6px 0 0"><button class="wb sm" data-act="go" data-v="spots">釣り場を変える</button><button class="wb sm" data-act="go" data-v="home">ホームへ</button></div>`:(p==='wait'?msg('ウキがしずんだらタップ！'):`<div style="text-align:center"><span class="pill" style="display:inline-flex;font-size:22px;padding:6px 18px;color:#ffcf4a">ヒット！今すぐタップ！</span></div>`)}
+function vAqua(){view.innerHTML=`<div id="aqBox" style="position:relative;height:100%;overflow:hidden;background:#0c0f18">
+<canvas id="cv" style="width:100%;display:block;image-rendering:pixelated;touch-action:manipulation" aria-label="水族館の館内。床をタップで移動、水槽や看板や魚をタップで説明"></canvas>
+<div class="pill" id="aqLabel" style="position:absolute;left:6px;top:4px;font-size:13px"></div>
+<button class="wb sm" data-act="aqmap" style="position:absolute;right:4px;top:2px">${ico('map',1)}地図</button>
+<button class="pill" id="aqL" data-act="aqside" data-v="-1" style="position:absolute;left:4px;bottom:6px;font:inherit;font-size:13px;color:var(--ink);cursor:pointer"></button><button class="pill" id="aqR" data-act="aqside" data-v="1" style="position:absolute;right:4px;bottom:6px;font:inherit;font-size:13px;color:var(--ink);cursor:pointer"></button>
+<div id="aqMap" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(8,10,20,.6);padding:12px;z-index:3"></div></div>`;
+const cv=$('#cv'),bx=$('#aqBox');cv.width=AW;AH=Math.max(280,Math.floor(bx.clientHeight*AW/bx.clientWidth));cv.height=AH;AWY=AH-Math.max(64,Math.round(AH*.22));const ky=(AWY-44)/180;AQR.forEach(r=>r.tanks.forEach(t=>{t.y=Math.round(26+(t.oy-26)*ky);t.h=Math.round(t.oh*ky)}));aqEnter(aqRoom);cvMode='aq'}
+const cellHTML=f=>{const c=S.dex[f.i]||DEV();return`<button class="cell${c?'':' no'}" data-act="info" data-v="${f.i}"><img class="sprite" src="${fishURL(f.i,!c)}" alt="">${c?f.name:'？？？'}<span class="star">${stars(f.r)}</span></button>`};
+function vDex(){const L=FISH.filter(f=>(dexF.spot<0||f.spot===dexF.spot)&&(!dexF.r||f.r===dexF.r));
+view.innerHTML=`<div class="panel"><h2>${ico('book',1)}魚図鑑 ${Object.keys(S.dex).length}/50</h2>
+<div class="tabs"><button class="wb sm${dexF.spot<0?' on':''}" data-act="dxs" data-v="-1">すべて</button>${SPOTS.map((s,i)=>s.soon?'':`<button class="wb sm${dexF.spot===i?' on':''}" data-act="dxs" data-v="${i}">${s.name}</button>`).join('')}</div>
+<div class="tabs"><button class="wb sm${!dexF.r?' on':''}" data-act="dxr" data-v="0">全レア度</button>${[1,2,3,4,5].map(r=>`<button class="wb sm${dexF.r===r?' on':''}" data-act="dxr" data-v="${r}">★${r}</button>`).join('')}</div>
+<div class="grid">${L.map(cellHTML).join('')}</div></div>`}
+/* ---- 釣り具の絵 ---- */
+const gearC={};
+function gearIcon(cat,i){const k=cat+i;if(gearC[k])return gearC[k];const c=mkc(24,24),g=c.getContext('2d'),dk=(a,t)=>mix(a,'#000000',t),lt=(a,t)=>mix(a,'#ffffff',t);
+if(cat==='rod'){const col=['#9a6a3a','#c8b45a','#2e2e36','#1e2e52','#d8a830'][i],acc=['#6a4424','#8a7a30','#7a7a88','#4a8ae0','#c83a3a'][i];
+for(let s=0;s<=18;s++){const x=3+s,y=21-s,w=s<6?2:1;R(g,x,y-(w-1),w,w,col);if(s>=6&&i>=2&&s%3===0)P(g,x,y-1,lt(col,.35));if(i===1&&s%4===0)R(g,x,y-1,2,2,'#8a7a30')}
+R(g,3,19,4,3,i===4?'#3a2414':'#c8a070');P(g,3,19,lt(i===4?'#3a2414':'#c8a070',.3));R(g,7,16,2,2,acc);
+[[11,12],[15,8],[19,4]].forEach(([x,y])=>{P(g,x+1,y-1,'#c8c8d0');P(g,x+2,y,'#c8c8d0')});P(g,21,2,acc);for(let y=3;y<13;y++)P(g,22,y,'rgba(255,255,255,.6)')}
+if(cat==='reel'){const col=['#8a8a90','#c8c8d0','#3a6ab8','#2a2a30','#e0b030'][i],acc=['#5a5a60','#7a7a88','#e8e8f0','#d83a3a','#fff0a0'][i];
+for(let y=-7;y<=7;y++)for(let x=-7;x<=7;x++){const d=x*x+y*y;if(d<=49){P(g,11+x,12+y,d>36?dk(col,.4):(x+y<-4?lt(col,.35):col))}}
+for(let y=-3;y<=3;y++)for(let x=-3;x<=3;x++)if(x*x+y*y<=9)P(g,11+x,12+y,acc);P(g,11,12,dk(col,.5));
+R(g,11,3,8,1,dk(col,.3));R(g,18,3,2,4,'#3a2a20');P(g,18,3,'#6a5a4a');R(g,8,19,7,2,dk(col,.35));R(g,6,21,11,1,dk(col,.5))}
+if(cat==='line'){const col=['#b89a6a','#e8f0f8','#f0c8d8','#5aa04a','#e8c040'][i];
+R(g,5,4,14,2,'#6a6a74');R(g,5,18,14,2,'#6a6a74');R(g,5,4,14,1,'#9a9aa4');R(g,5,18,14,1,'#8a8a94');
+for(let y=6;y<18;y++)for(let x=6;x<18;x++){let cc=(x+y)%3===0?dk(col,.18):col;if(x<8)cc=lt(cc,.3);if(x>15)cc=dk(cc,.2);if(i===4&&(x*7+y*3)%11===0)cc='#ffffff';if(i===3&&(x+y)%2===0)cc=dk(col,.25);P(g,x,y,cc)}
+R(g,11,9,2,6,'#3a3a44');for(let s=0;s<6;s++)P(g,18+s*.8,10+s*1.6,col)}
+for(let y=0;y<24;y++)for(let x=0;x<24;x++){}
+return gearC[k]=c.toDataURL()}
+function vShop(){const G=GEAR[shopTab];view.innerHTML=`<div class="panel"><h2>${ico('bag',1)}釣り具ショップ</h2><p>合計釣りパワー <b style="font-size:22px;font-weight:400">${power()}</b></p>
+<div class="tabs" style="margin:6px 0 0">${Object.keys(GEAR).map(k=>`<button class="wb sm${k===shopTab?' on':''}" data-act="tab" data-v="${k}">${GEAR[k].label}</button>`).join('')}</div></div>
+<div class="panel"><p class="muted">${G.label}：${G.eff}</p>${G.items.map((it,i)=>{const own=S.own[shopTab].includes(i)||DEV(),eq=S.eq[shopTab]===i;
+return`<div class="row"><img src="${gearIcon(shopTab,i)}" alt="" style="width:48px;height:48px;image-rendering:pixelated;flex:none;background:#efdcb4;border:2px solid #b08a5a"><div style="flex:1"><div>${it[0]}</div><div class="muted">釣りパワー ${it[1]}${own?'':`・${it[2].toLocaleString()}コイン`}</div></div>${eq?'<span class="muted">装備中</span>':own?`<button class="wb sm" data-act="equip" data-v="${i}">装備する</button>`:`<button class="wb sm gold" data-act="buy" data-v="${i}">購入</button>`}</div>`}).join('')}</div><p class="note">性能値・価格は仮設定です</p>`}
+
+function info(id){const f=FISH[id],c=S.dex[id],s=SPOTS[f.spot],k=c||DEV();
+modal(`<div style="text-align:center"><img class="sprite l" src="${fishURL(id,!k)}" alt=""><h2 style="justify-content:center">${k?f.name:'？？？'}</h2><div class="star">${stars(f.r)}</div></div>
+<dl><dt>生息地</dt><dd>${s.name}</dd><dt>出現時間</dt><dd>${[...f.times].map(t=>t==='夕'?'夕方':t).join('・')}</dd><dt>必要パワー</dt><dd>${f.pow}</dd>${c?`<dt>初回捕獲日</dt><dd>${c.first}日目</dd><dt>最大サイズ</dt><dd>${c.max}cm</dd><dt>釣った数</dt><dd>${c.n}匹</dd>`:'<dt>状態</dt><dd>まだ釣っていない</dd>'}</dl>
+<p>${k?f.desc:'釣り上げると説明が読めます。'}</p><button class="wb big" data-act="close">閉じる</button>`)}
+
+/* ---------- 釣り ---------- */
+function pickFish(si,b){const L=FISH.filter(f=>f.spot===si&&f.times.includes(b));const cnt={};L.forEach(f=>cnt[f.r]=(cnt[f.r]||0)+1);let tot=L.reduce((s,f)=>s+RW[f.r]/cnt[f.r],0),r=Math.random()*tot;for(const f of L){r-=RW[f.r]/cnt[f.r];if(r<=0)return f}return L[0]}
+function cast(){if(SPOTS[F.spot].soon){toast('この釣り場の魚は準備中です');return}if(S.min+30>MAXMIN){toast('もう夜明け前…ベッドで休もう');return}ac();const b=band(S.min);S.min+=30;const f=pickFish(F.spot,b);
+Object.assign(F,{phase:'wait',wt:1+Math.random()*2,band:b,fish:f,size:Math.round((f.min+(f.max-f.min)*Math.random()**1.6)*10)/10,g:50,x:60,y:30,tx:60,ty:60,tt:0,thr:0,def:Math.max(0,(f.pow-power())/f.pow),rip:0});
+updTop();fishCtl();gt('待っています…');save()}
+const gt=t=>{const e=$('#gtxt');if(e)e.textContent=t};let fbT;function fb(t){const e=$('#fb');if(!e)return;e.textContent=t;e.classList.add('show');clearTimeout(fbT);fbT=setTimeout(()=>e.classList.remove('show'),600)}
+function tapFish(){if(!F||F.phase!=='play')return;const d=Math.hypot(F.x-CX,F.y-CY),Rr=16*(1+S.eq.reel*0.06);let v,m;
+if(d<=Rr*.3){v=15;m='ど真ん中！'}else if(d<=Rr*.65){v=10;m='ナイス！'}else if(d<=Rr){v=5;m='おしい'}else{v=-5;m='ミス…'}
+v=v>0?v*(1-F.def*0.3)+S.eq.reel*0.8:v*(1+F.def*0.5);if(v>0){F.mode='out';F.thr=Math.max(F.thr,.35);F.ang+=1.5+Math.random()*3.2;F.rmax=(24+Math.random()*8)*(1+F.def*.4)*(1-S.eq.rod*.07)}F.g=clamp(F.g+v,0,100);fb(`${m} ${v>0?'+':''}${Math.round(v)}%`);se(v>0?'good':'bad');F.rip=0.4;if(F.g>=100)endFish(true)}
+function fishStep(dt){if(!F)return;const p=F.phase;
+if(p==='wait'){F.wt-=dt;if(F.wt<=0){F.phase='hit';F.ht=1.4;se('hit');fishCtl()}}
+else if(p==='hit'){F.ht-=dt;if(F.ht<=0)missHook()}
+else if(p==='play'){const d=F.def,out=(24+F.fish.r*2)*(1+d*.8)*(1-S.eq.rod*.08)*(F.thr>0?1.8:1),pull=42*(1+S.eq.reel*0.04)*(1-d*.2);
+if(F.mode==='out'){F.r+=out*dt;if(F.r>=F.rmax){F.mode='in'}}
+else if(F.mode==='in'){F.r-=pull*dt;if(F.r<=0){F.r=0;F.mode='dwell';F.mt=.25*(1-d*.6)}}
+else{F.mt-=dt;if(F.mt<=0){F.mode='out';F.ang+=1.2+Math.random()*3.9;F.rmax=(24+Math.random()*8)*(1+d*.4)*(1-S.eq.rod*.07);if(Math.random()<(.12+d*.2)*(1-S.eq.rod*.18))F.thr=.7}}
+const wob=Math.sin(T*7)*(1.5+d*2),ox=Math.cos(F.ang),oy=Math.sin(F.ang)*.85;
+const nx=clamp(CX+ox*F.r-oy*wob,10,150),ny=clamp(CY+oy*F.r+ox*wob,74,158);F.vx=F.mode==='in'?-(nx-F.x)||F.vx:(nx-F.x)||F.vx;F.x=nx;F.y=ny;F.thr-=dt;
+const lineK=1-S.eq.line*0.09,rodK=1-S.eq.rod*0.1;let dec=(F.def>0?3.2+F.def*12*(1-S.eq.rod*.08):1.2)*lineK;if(F.thr>0)dec+=(F.def>0?3*(1+F.def*2):1)*rodK*lineK;F.g-=dec*dt;if(F.g<=0){F.g=0;endFish(false)}}
+const gb=$('#gbar');if(gb){gb.style.width=F.g+'%';gb.style.background=F.g<25?'#e0503a':F.g<60?'#e8c040':'#6fd04a';if(F.phase==='play')gt(Math.round(F.g)+'%')}}
+function flash(r){const d=document.createElement('div');d.style.cssText=`position:absolute;inset:0;z-index:30;pointer-events:none;background:${r>=5?'#fff3c0':'#f0e0ff'};opacity:.85;transition:opacity .6s`;$('#app').appendChild(d);requestAnimationFrame(()=>requestAnimationFrame(()=>d.style.opacity=0));setTimeout(()=>d.remove(),700)}
+function catchSE(r,special){if(!S)return;const v=S.set.se;if(r<=2){se('win');if(special)tone(1568,.15,'square',v,.45);return}
+const seq=r===3?[523,659,784,1047,1319]:r===4?[392,523,659,784,1047,1319,1568]:[523,659,784,1047,784,1047,1319,1568,2093];seq.forEach((f,i)=>tone(f,.2,'square',v,i*.08));if(r>=4)seq.slice(-3).forEach((f,i)=>tone(f/2,.5,'triangle',v,seq.length*.08+i*.05));if(r===5)[1568,2093,2637].forEach((f,i)=>tone(f,.6,'sine',v*.8,1+i*.12))}
+function fxRun(r,special){const c=$('#fxcv');if(!c)return;const g=c.getContext('2d'),col=['#ffffff','#ffffff','#ffffff','#6ab0ff','#c88aff','#ffd84a'][r],t0=performance.now(),conf=[];
+if(r>=5)for(let i=0;i<40;i++)conf.push({x:Math.random()*64,y:-Math.random()*40,v:6+Math.random()*10,c:['#ff6a6a','#ffd84a','#6ad0ff','#8aff8a','#ff9ae0'][i%5]});
+const step=()=>{if(!document.body.contains(c))return;const t=(performance.now()-t0)/1000;g.clearRect(0,0,64,40);
+if(r>=3){g.save();g.translate(32,20);g.rotate(t*.6);g.fillStyle=col;g.globalAlpha=r===5?.35:.25;const n=r===5?12:8;for(let i=0;i<n;i++){g.rotate(Math.PI*2/n);g.beginPath();g.moveTo(0,0);g.lineTo(40,-4);g.lineTo(40,4);g.fill()}g.restore();g.globalAlpha=1}
+const ns=r>=3?14:special?8:4;for(let i=0;i<ns;i++){const a=i*2.4+t*.8,rr=12+((i*7+t*9)%14),x=Math.round(32+Math.cos(a)*rr*1.3),y=Math.round(20+Math.sin(a)*rr*.8);if(Math.sin(t*6+i)>0){P(g,x,y,col);if(r>=3){P(g,x-1,y,col);P(g,x+1,y,col);P(g,x,y-1,col);P(g,x,y+1,col)}}}
+conf.forEach(p=>{p.y+=p.v/60;if(p.y>42){p.y=-2;p.x=Math.random()*64}g.fillStyle=p.c;g.fillRect(Math.round(p.x+Math.sin(t*3+p.v)*2),Math.round(p.y),2,1)});
+requestAnimationFrame(step)};step()}
+function hookTap(){if(!F)return;if(F.phase==='hit'){F.phase='play';Object.assign(F,{x:CX,y:CY,r:0,ang:Math.random()*6.28,mode:'dwell',mt:.5,vx:1});se('good');if(scr==='fishing')vMini()}else if(F.phase==='wait')fb('まだ早い…')}
+function missHook(){F.phase='done';fishCtl();se('lose');modal(`<h2>エサだけ取られた…</h2><p>ヒットしたら、すぐに画面をタップしよう。</p><button class="wb big" data-act="close">閉じる</button>`);save()}
+function endFish(ok){F.phase='done';if(cvMode==='mini')vFishing();fishCtl();if(!ok){se('lose');gt('逃げられた');const dm=F.def>.3?'この魚には釣りパワーが大きく足りなかったようだ。ショップで釣り具を強化しよう。':F.def>0?'釣りパワーが少し足りなかったようだ。釣り具を強化すると楽に釣れるはず。':'魚がリングの中心に来たら落ち着いてタップしよう。';modal(`<h2>逃げられた…</h2><p>${dm}</p><button class="wb big" data-act="close">閉じる</button>`);save();return}
+const f=F.fish,size=F.size,isNew=!S.dex[f.i],prevMax=S.dex[f.i]?S.dex[f.i].max:0,sizeUp=!isNew&&size>prevMax,before=S.quests.filter(q=>qInfo(q).ok).length;const d=S.dex[f.i]||{first:S.day,max:0,n:0};d.n++;if(size>d.max)d.max=size;S.dex[f.i]=d;
+S.today.push({id:f.i,size,spot:SPOTS[f.spot].id,band:F.band});const qn=S.quests.filter(q=>qInfo(q).ok).length>before,pr=priceOf(f,size);F.last={id:f.i,size};catchSE(f.r,sizeUp||isNew);gt('釣れた！');save();if(f.r>=4)flash(f.r);
+const RL=['','','','レア！','スーパーレア！','ウルトラレア！！'][f.r],RC=['','','','#3a7ad0','#8a4ad0','#d89a10'][f.r];
+modal(`<div style="text-align:center"><p style="margin:0;display:flex;gap:6px;justify-content:center;flex-wrap:wrap">${RL?`<span class="tag pop" style="background:${RC};font-size:16px">${RL}</span>`:''}${isNew?'<span class="tag pop d1">NEW! 図鑑と水族館に登録</span>':''}${sizeUp?`<span class="tag pop d2" style="background:#e07a1a">サイズ更新！</span>`:''}${!RL&&!isNew&&!sizeUp?'釣れた！':''}</p>
+<div style="position:relative;width:192px;height:120px;margin:4px auto 0"><canvas id="fxcv" width="64" height="40" style="position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated"></canvas><img class="sprite l ${f.r>=3?'pop':''}" src="${fishURL(f.i)}" alt="" style="position:absolute;inset:0"></div><h2 style="justify-content:center;font-size:22px">${f.name}</h2><div class="star">${stars(f.r)}</div><p>体長 <b style="font-weight:400;font-size:20px;${sizeUp?'color:#c85a10':''}">${size}cm</b>・売値 ${pr}コイン</p>${qn?'<p class="tag" style="background:#4a9a4a">依頼を達成！ホームで受け取れます</p>':''}</div>
+<div class="btns" style="margin:10px 0 0"><button class="wb gold" data-act="sellnow">${ico('coin')}売る</button><button class="wb" data-act="keep">クーラーへ</button></div>`);fxRun(f.r,sizeUp||isNew)}
+
+/* ---------- 情景 ---------- */
+/* ---- 情景（繊細版） ---- */
+const BAY=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];
+const mul=(a,b)=>{const A=hex(a),B=hex(b);return'#'+A.map((v,i)=>Math.round(v*B[i]/255).toString(16).padStart(2,'0')).join('')};
+function grad(g,x0,y0,w,h,stops){const sh=[];for(let i=0;i<stops.length-1;i++)for(let k=0;k<4;k++)sh.push(mix(stops[i],stops[i+1],k/4));sh.push(stops[stops.length-1]);const n=sh.length-1;
+for(let y=0;y<h;y++){const f=y/Math.max(1,h-1)*n,i=Math.min(n-1,Math.floor(f)),fr=f-i;for(let x=0;x<w;x++)P(g,x0+x,y0+y,fr>BAY[(y&3)*4+(x&3)]/16?sh[i+1]:sh[i])}}
+const nz=(x,s)=>Math.sin(x*.045+s)*7+Math.sin(x*.12+s*2.3)*3.2+Math.sin(x*.29+s*3.1)*1.3;
+const SKY={朝:['#6f9fd6','#a9c8e8','#f2dcc4','#ffe9cc'],昼:['#3d7ccf','#68a4e2','#a6d2f0','#d6edf8'],夕:['#2c306c','#6e4686','#d8705a','#ffbe78'],夜:['#0e1432','#1a2554','#2a3a72','#384a84']};
+const TINT={朝:'#fff0e2',昼:'#ffffff',夕:'#f2aa8c',夜:'#5862a6'};
+const FAR={朝:'#9fb4cf',昼:'#8aaacb',夕:'#8c6a90',夜:'#2c386a'},MID={朝:'#7d9bab',昼:'#628ca3',夕:'#684a70',夜:'#212a4e'};
+const WAT={朝:['#8eaacc','#5a7aa6','#3c5888'],昼:['#5a96cc','#3a72aa','#24528a'],夕:['#7a5a86','#4a3a6a','#24204a'],夜:['#24305e','#162048','#0a1030']};
+function sun(g,b,x,y){if(b==='夜'){for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){if(dx*dx+dy*dy<=16&&(dx+1.8)**2+(dy-1)**2>12)P(g,x+dx,y+dy,'#f6f0c8')}return}
+const c=b==='夕'?['#ff9a5a','#ffd08a']:b==='朝'?['#ffe6b0','#fff6dc']:['#fff4c8','#ffffff'],r=b==='夕'?7:4;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const d=dx*dx+dy*dy;if(d<=r*r)P(g,x+dx,y+dy,d<r*r*.4?c[1]:c[0])}}
+function skyLayer(W,H,b,far,mid,flat){const c=mkc(W,H),g=c.getContext('2d');grad(g,0,0,W,H,SKY[b]);
+sun(g,b,{朝:24,昼:118,夕:40,夜:122}[b],Math.round(H*{朝:.55,昼:.18,夕:.62,夜:.16}[b]));
+if(b==='夜'){const r=rng(9);for(let i=0;i<70;i++)P(g,r()*W,r()*H*.7,r()<.3?'#ffffff':'#8a9ad0')}
+if(flat){R(g,0,flat,W,H-flat,FAR[b]);R(g,0,flat,W,1,mix(FAR[b],'#ffffff',.25))}
+else for(let x=0;x<W;x++){const y1=Math.round(far+nz(x,1.7));R(g,x,y1,1,H-y1,FAR[b]);P(g,x,y1,mix(FAR[b],SKY[b][3],.35));const y2=Math.round(mid+nz(x,4.2)*.6);R(g,x,y2,1,H-y2,MID[b])}
+return c}
+function pine(g,x,base,h,col,lt){const top=base-h;for(let y=top;y<=base-2;y++){const k=y-top,hw=Math.floor(k*.3+(k%4)*.5);for(let dx=-hw;dx<=hw;dx++)P(g,x+dx,y,dx===-hw&&k>1?lt:col)}R(g,x,base-2,1,2,'#3a2a1c')}
+function cloud(g,x,y,c,sh){[[0,2,22,3],[4,0,10,2],[12,1,8,2],[2,5,18,1]].forEach(([a,b2,w,h],i)=>R(g,x+a,y+b2,w,h,i===3?sh:c))}
+function glow(g,x,y,r,a,c){for(let k=r;k>2;k-=3){g.fillStyle=`rgba(${c},${a})`;g.beginPath();g.arc(x,y,k,0,6.283);g.fill()}}
+function line(g,x0,y0,x1,y1,sag,col){const n=Math.ceil(Math.hypot(x1-x0,y1-y0));for(let i=0;i<=n;i++){const q=i/Math.max(1,n);P(g,x0+(x1-x0)*q,y0+(y1-y0)*q+Math.sin(q*Math.PI)*sag,col)}}
+/* ---- キャラクター（形はそのまま、色だけ変える） ---- */
+const CH_F=['...hhhhh...','..hhhhhhh..','..bbbbbbb..','hhhhhhhhhhh','.HrsssssrH.','.rsesssesr.','.rsssssssr.','..SsssssS..','...vcccv...','..vvcccvv..','.svvcccvvs.','.svvvvvvvs.','..VvvvvvV..','..ppppppp..','..ppp.ppp..','..PPp.pPP..','..ooo.ooo..','.oooo.oooo.'];
+const CH_B=['...hhhhh...','..hhhhhhh..','..bbbbbbb..','hhhhhhhhhhh','.HrrrrrrrH.','.rrrrrrrrr.','.rrrrrrrrr.','..rrrrrrr..','...vvvvv...','..vvvvvvvss','.vvvvvvvvs.','.svvvvvvv..','..VvvvvvV..','..ppppppp..','..ppp.ppp..','..PPp.pPP..','..ooo.ooo..','.oooo.oooo.'];
+const LOOKS={skin:['#f2c8a0','#f6d4b4','#d9a074','#a8704a','#74482e'],hairC:['#4a2e20','#2a2430','#e2b24c','#b0442c','#cfcfd8','#3e7a4a','#3a5aa8','#e27aa2'],
+hatC:['#e6c272','#e8e2d4','#c84a3a','#3a7ab8','#5a9a4a','#3a3a44','#e27aa2'],band:['#c64a3a','#3a5aa8','#3a3a44','#e8c84a','#e27aa2'],
+vestC:['#6f8f44','#3a7ab8','#c84a3a','#e89a3a','#6a4aa8','#3a3a44','#c8a070'],shirtC:['#e8e2d4','#f0c8d0','#a8d0f0','#e8c84a','#3a3a44'],pants:['#5a4a3c','#3a4a6a','#2a2a30','#7a6a4a','#8a3a3a']};
+const LOOKDEF={skin:0,hairC:0,hatC:0,band:0,vestC:0,shirtC:0,pants:0};
+function charPal(L,T){L=Object.assign({},LOOKDEF,L||{});const c=k=>LOOKS[k][L[k]]||LOOKS[k][0],dk=(x,a)=>mix(x,'#000000',a),sk=c('skin'),ht=c('hatC'),v=c('vestC'),pt=c('pants');
+const pal={h:ht,H:dk(ht,.25),b:c('band'),r:c('hairC'),q:dk(c('hairC'),.3),s:sk,S:mix(sk,'#7a3a2a',.25),e:'#2a1a14',c:c('shirtC'),v,V:dk(v,.3),p:pt,P:dk(pt,.3),o:'#3a2a20'};
+if(T&&T!=='#ffffff')for(const k in pal)pal[k]=mul(pal[k],T);return pal}
+const col=(x,y0,y1,c)=>Array.from({length:y1-y0+1},(_,i)=>[x,y0+i,typeof c==='function'?c(i):c]),rowp=(x0,x1,y,c)=>Array.from({length:x1-x0+1},(_,i)=>[x0+i,y,c]);
+const HAIRSTY=[{n:'ショート',f:[],b:[]},
+{n:'ボブ',f:[...col(0,5,6,'r'),...col(10,5,6,'q'),[1,7,'r'],[9,7,'q']],b:[...col(0,5,6,'r'),...col(10,5,6,'q'),...rowp(2,8,8,'q')]},
+{n:'ロング',f:[...col(1,7,9,i=>i<2?'r':'q'),...col(9,7,9,'q')],b:[...rowp(2,8,8,'r'),...rowp(2,8,9,'r'),...rowp(3,7,10,'q'),[1,8,'r'],[9,8,'q']]},
+{n:'ポニーテール',f:[[10,5,'b'],...col(10,6,8,i=>i?'q':'r'),[11,7,'q']],b:[[5,7,'b'],[6,7,'b'],...col(5,8,10,'r'),...col(6,8,10,'q'),[5,11,'q']]},
+{n:'おさげ',f:[...col(1,7,9,i=>i%2?'q':'r'),[1,10,'b'],...col(9,7,9,i=>i%2?'r':'q'),[9,10,'b']],b:[...col(2,8,10,i=>i%2?'q':'r'),[2,11,'b'],...col(8,8,10,i=>i%2?'r':'q'),[8,11,'b']]},
+{n:'刈り上げ',f:[[1,6,'S'],[9,6,'S']],b:[...rowp(2,8,7,'q')]}];
+function sprC(g,back,pal,x,y,L,blink){const m=back?CH_B:(blink?CH_F.map(r=>r.replace(/e/g,'S')):CH_F);spr(g,m,pal,x,y);const st=HAIRSTY[(L&&L.hs)||0]||HAIRSTY[0];(back?st.b:st.f).forEach(([i,j,c])=>P(g,x+i,y+j,pal[c]))}
+function spr(g,map,pal,x,y){map.forEach((row,j)=>{for(let i=0;i<row.length;i++){const ch=row[i];if(ch!=='.')P(g,x+i,y+j,pal[ch])}})}
+function drawCloset(g,t){g.clearRect(0,0,48,30);for(let y=0;y<24;y+=6){R(g,0,y,48,6,'#9a6a42');R(g,0,y,48,1,'#b4825a');R(g,0,y+5,48,1,'#6e4628')}R(g,0,24,48,6,'#8f5e36');R(g,0,24,48,1,'#4a2e1a');
+R(g,7,26,13,2,'rgba(0,0,0,.18)');R(g,28,26,13,2,'rgba(0,0,0,.18)');const pal=charPal(S.look2);sprC(g,false,pal,8,9,S.look2,(t%3.6)<.14);sprC(g,true,pal,29,9,S.look2)}
+const HW=160,GY=104,WL=118,FL=109;let HH=176;
+let homeLand=null;const homeSky={},watC={};
+function buildHomeLand(){const c=mkc(HW,WL),g=c.getContext('2d'),r=rng(42);
+for(let x=-6;x<HW+6;x+=3+Math.floor(r()*4))pine(g,x,GY-1,8+Math.floor(r()*8),'#24483a','#2e5644');
+for(let x=-4;x<HW+6;x+=5+Math.floor(r()*6))pine(g,x,GY+2,12+Math.floor(r()*10),'#2f5a3a','#4a7a4a');
+for(let x=0;x<HW;x++){for(let y=GY;y<WL;y++){const v=r();let col=y<GY+2?(v<.3?'#4e7a3a':'#5e8a44'):(v<.12?'#b0905a':v<.2?'#dcc08a':'#c9a96a');if(y===WL-1)col=v<.5?'#e0d4b0':'#d4c49a';P(g,x,y,col)}if(r()<.4)P(g,x,GY-1,'#6e9a4a')}
+for(let y=82;y<=FL;y++){const hw=(y-82)*.74,a=Math.round(26-hw),b=Math.round(26+hw);for(let x=a;x<=b;x++)P(g,x,y,x<26?'#d9a441':'#b07f2c');P(g,a,y,'#7a5420');P(g,b,y,'#5a3a14')}
+for(let y=93;y<=FL;y++){const hw=(y-93)*.42,a=Math.round(26-hw);for(let x=a;x<=Math.round(26+hw);x++)P(g,x,y,'#3a2616');P(g,a-1,y,'#f0cc70')}
+for(let i=0;i<=12;i++){P(g,13-i*.9,96+i*1.1,'#e8e0c8');P(g,39+i*.9,96+i*1.1,'#e8e0c8')}R(g,4,FL+1,46,1,'#a8884e');
+for(let i=0;i<30;i++){P(g,49+i*.12,FL-i,'#8a6a4a');P(g,52+i*.2,FL-i,'#6a4a30')}P(g,50,FL-6,'#b8b8c0');P(g,53,FL-7,'#b8b8c0');
+R(g,58,84,1,FL-84,'#6a5a4a');R(g,58,84,4,1,'#6a5a4a');R(g,60,85,3,1,'#2a2a2a');R(g,59,86,5,6,'#2a2a2a');R(g,60,87,3,4,'#f8e4a0');
+R(g,84,98,30,2,'#8a5e3a');R(g,84,98,30,1,'#a8784a');R(g,86,100,2,FL-100,'#5a3a22');R(g,110,100,2,FL-100,'#5a3a22');R(g,86,104,26,1,'#5a3a22');
+R(g,89,93,9,5,'#3a6aa8');R(g,89,93,9,1,'#5a8ac8');R(g,92,92,3,1,'#2a2a2a');R(g,101,95,3,3,'#e8e0d0');P(g,104,96,'#e8e0d0');P(g,102,95,'#6a4026');
+R(g,114,102,6,FL-102,'#8a9aa8');R(g,114,102,6,1,'#c8d4dc');R(g,115,104,4,1,'#6a7a88');
+[[122,FL],[124,FL-1],[127,FL],[130,FL],[133,FL-1],[135,FL]].forEach(([x,y])=>{R(g,x,y,2,2,'#8a8680');P(g,x,y,'#aaa69e')});
+for(let i=0;i<8;i++){P(g,124+i,FL-1-i*.25,'#6a4026');P(g,133-i,FL-1-i*.25,'#5a3420')}
+R(g,140,103,12,4,'#7a5030');R(g,140,103,12,1,'#9a6a40');R(g,151,103,2,4,'#c8a070');P(g,152,105,'#8a6040');
+R(g,147,86,1,FL-86,'#5a3a22');R(g,157,86,1,FL-86,'#5a3a22');R(g,145,86,15,10,'#9a6a3a');R(g,145,86,15,1,'#b88a58');R(g,147,88,4,3,'#f0e6d0');R(g,152,88,5,5,'#f0e6d0');R(g,148,92,3,3,'#f0e6d0');P(g,149,88,'#d84a3a');P(g,154,88,'#d84a3a');
+return c}
+const hc={sc:mkc(HW,WL),lc:mkc(HW,WL),mk:mkc(HW,WL)};let smoke=[];
+function skyLife(g,b,t,W,lim){lim=lim||56;if(b==='夜'){for(let i=0;i<14;i++)if(Math.sin(t*2+i*1.7)>.3)P(g,(i*53)%W,(i*29)%lim,'#ffffff')}
+else{const cc=b==='夕'?'#f0b4a0':'#ffffff';for(let i=0;i<3;i++)cloud(g,((i*70+t*2*(1+i*.3))%(W+40))-30,10+i*11,cc,SKY[b][1])}}
+function waterLayer(W,H,cols){const k=W+'_'+H+cols.join();if(watC[k])return watC[k];const c=mkc(W,H);grad(c.getContext('2d'),0,0,W,H,cols);return watC[k]=c}
+function drawHome(g,t){const b=band(S.min);if(!homeLand)homeLand=buildHomeLand();if(!homeSky[b])homeSky[b]=skyLayer(HW,WL,b,70,84);
+const sg=hc.sc.getContext('2d'),lg=hc.lc.getContext('2d'),mg=hc.mk.getContext('2d');
+sg.drawImage(homeSky[b],0,0);skyLife(sg,b,t,HW);
+lg.clearRect(0,0,HW,WL);lg.drawImage(homeLand,0,0);sprC(lg,false,charPal(S.look2),66,FL-17,S.look2,(t%4)<.15);
+mg.clearRect(0,0,HW,WL);mg.drawImage(hc.lc,0,0);lg.globalCompositeOperation='multiply';lg.fillStyle=TINT[b];lg.fillRect(0,0,HW,WL);lg.globalCompositeOperation='destination-in';lg.drawImage(hc.mk,0,0);lg.globalCompositeOperation='source-over';
+sg.drawImage(hc.lc,0,0);
+const fx=128,fy=FL-2;for(let i=0;i<7;i++){const h=3+Math.round((Math.sin(t*9+i*1.9)+1)*2.2)-Math.abs(i-3);for(let k=0;k<h;k++)P(sg,fx-3+i,fy-k,k<h*.4?'#e8602a':k<h*.75?'#ffb040':'#fff2a8')}
+if(Math.random()<.15)smoke.push({x:fx+Math.random()*2-1,y:fy-8,a:.45});smoke=smoke.filter(p=>(p.y-=.15,p.x+=Math.sin(t+p.y*.3)*.1,p.a-=.004)>0);smoke.forEach(p=>{sg.fillStyle=`rgba(210,210,220,${p.a})`;sg.fillRect(Math.round(p.x),Math.round(p.y),1,1)});
+if(b==='夕'||b==='夜'){sg.globalCompositeOperation='lighter';glow(sg,fx,fy-3,24+Math.sin(t*11)*2,b==='夜'?.07:.04,'255,140,60');glow(sg,61,89,12,b==='夜'?.06:.03,'255,210,120');sg.globalCompositeOperation='source-over';R(sg,60,87,3,4,'#fff6c0')}
+if(b==='夜')for(let i=0;i<6;i++)if(Math.sin(t*3+i)>-.2)P(sg,20+i*24+Math.sin(t*.7+i)*8,GY-6+Math.sin(t*1.1+i*2)*5,'#e8ff8a');
+g.drawImage(hc.sc,0,0);reflect(g,hc.sc,HW,WL,HH,t,b,1.05,60)}
+function reflect(g,src,W,y0,y1,t,b,sq,rows){g.drawImage(waterLayer(W,y1-y0,WAT[b]),0,y0);const n=Math.min(rows,y1-y0);
+for(let k=0;k<n;k++){const sy=y0-1-Math.floor(k*sq);if(sy<0)break;g.globalAlpha=Math.max(0,.62-k*(.62/n));g.drawImage(src,0,sy,W,1,Math.round(Math.sin(k*.7+t*2.4)*(.5+k*.05)),y0+k,W,1)}g.globalAlpha=1;
+for(let i=0;i<14;i++){const x=((i*41+t*(4+i%3)*(i%2?1:-1))%(W+20)+W+20)%(W+20)-10,y=y0+3+(i*17)%(y1-y0-4);R(g,x,y,2+i%4,1,b==='夜'?'rgba(150,170,230,.35)':'rgba(255,255,255,.35)')}
+for(let x=0;x<W;x++)if(Math.sin(x*.4+t*1.5)+Math.sin(x*.13)>-.2)P(g,x,y0,b==='夜'?'rgba(200,210,240,.22)':'rgba(240,235,220,.5)')}
+const FW=160,FH=180,HZ=62,CX=96,CY=112;const fTop={},fWat={};
+function fishTop(si,b){const k=si+b+FOFF;if(fTop[k])return fTop[k];const O=FOFF,c=skyLayer(FW,HZ+O,b,36+O,48+O,si>=4?55+O:0),g=c.getContext('2d'),r=rng(si*7+1),T=TINT[b];
+if(si===1){const B=HZ+O-1;for(let x=-6;x<FW+6;x+=4+Math.floor(r()*4))pine(g,x,B-2,14+Math.floor(r()*10),mul('#24483a',T),mul('#2e5644',T));
+for(let x=-8;x<FW+8;x+=9+Math.floor(r()*8)){const h=20+Math.floor(r()*16);if(r()<.5)pine(g,x,B+1,h,mul('#2f5a3a',T),mul('#4a7a4a',T));else{R(g,x,B-Math.round(h*.35),2,Math.round(h*.35)+1,mul('#4a3020',T));const cy=B-h*.62,rr=h*.36;for(let yy=-rr;yy<=rr;yy++)for(let xx=-rr;xx<=rr;xx++){if(xx*xx+yy*yy<=rr*rr){const lt2=xx+yy<-rr*.4;P(g,x+1+xx,cy+yy,mul(lt2?'#6a9a4a':(xx*3+yy*5)%7===0?'#3e6a34':'#4e7e3e',T))}}}}
+for(let x=0;x<FW;x++){const e=Math.round(2+Math.sin(x*.3)*1.2);R(g,x,B-e+2,1,e,mul(x%9<2?'#8a8478':'#5a7a3a',T))}}
+else if(si<4){for(let x=-4;x<FW+4;x+=3+Math.floor(r()*3))pine(g,x,HZ+O-1,5+Math.floor(r()*6),mul('#2a5038',T),mul('#3a6a46',T));R(g,0,HZ+O-2,FW,2,mul(si===2?'#9a9a8a':'#4a6a3a',T))}
+else if(si===4){for(let x=108;x<142;x++){const h=Math.round(6-Math.abs(x-125)*.35);if(h>0)R(g,x,55+O-h,1,h,mul('#4a5a6a',T))}R(g,121,42+O,2,8,mul('#e8e0d0',T));R(g,121,42+O,2,2,mul('#c84a3a',T))}
+topExtra(g,si,b,T,O);return fTop[k]=c}
+function fishWater(si,b){const k=si+b;if(fWat[k])return fWat[k];const H=FH-HZ,c=mkc(FW,H),g=c.getContext('2d'),T=TINT[b],w=SPOTS[si].water.map(x=>mix(mul(x,T),WAT[b][1],b==='昼'?.15:.4)),r=rng(si*13+5);grad(g,0,0,FW,H,[w[1],w[2],w[3]]);
+if(si===2)for(let i=0;i<700;i++)P(g,r()*FW,20+r()*(H-20),mix(w[2],mul('#d8d0b8',T),.35));
+if(si===0)[[30,40],[134,30],[142,82],[20,90]].forEach(([x,y],i)=>{for(let dy=-2;dy<=2;dy++)for(let dx=-5;dx<=5;dx++)if((dx/5)**2+(dy/2.4)**2<=1&&!(dx>0&&dx<4&&dy===0))P(g,x+dx,y+dy,mul(dy<0?'#5aa04a':'#3e8038',T));if(i%2===0){P(g,x-1,y-2,mul('#f4a8c8',T));P(g,x,y-3,mul('#ffd0e0',T));P(g,x+1,y-2,mul('#f4a8c8',T))}});
+if(si===1)[[20,30],[142,60],[124,18]].forEach(([x,y])=>{for(let dy=-2;dy<=1;dy++)for(let dx=-3;dx<=3;dx++)if((dx/3)**2+(dy/2)**2<=1)P(g,x+dx,y+dy,mul(dy<0?'#a09a90':'#6a6660',T));R(g,x-5,y+2,10,1,mul('#ffffff',T))});
+return fWat[k]=c}
+const rbC={};function riverBank(b,T){if(rbC[b])return rbC[b];const c=mkc(FW,40),g=c.getContext('2d'),r=rng(77);
+for(let x=0;x<FW;x++){const ty=Math.round(31+Math.sin(x*.13)*2+Math.sin(x*.41));for(let y=0;y<ty;y++){const k=ty-y,h=((x*73856093)^(y*19349663))>>>0;P(g,x,y,mul(k<=1?'#6a6458':k<=2?'#5a7a3a':h%13===0?'#3e6a34':h%7===0?'#5a8a44':'#4a7a3c',T))}R(g,x,ty,1,3,'rgba(10,30,30,.22)')}
+for(let x=6;x<FW;x+=15+Math.floor(r()*8))blob(g,x,27+Math.floor(r()*3),5+Math.floor(r()*3),3,mul('#3e6a34',T));
+[[22,1,30],[78,3,36],[138,0,32]].forEach(([x,o,h])=>pine(g,x,26+o,h>26?26:h,mul('#2a5236',T),mul('#467a48',T)));
+[[34,31],[96,32],[126,30]].forEach(([x,y])=>blob(g,x,y,5,2,mul('#8a867c',T)));return rbC[b]=c}
+function bankY(x){return Math.round(153+Math.sin(x*.19)*1.6+Math.sin(x*.05+1)*3)}
+function drawBank(g,T,t){for(let x=0;x<FW;x++){const y0=bankY(x);for(let y=y0;y<FH;y++){const k=y-y0;P(g,x,y,mul(k<2?(x%5===0?'#7aaa4a':'#5e8a3a'):k<4?'#4e7a34':((((x*73856093)^(y*19349663))>>>0)%11===0?'#5a4430':'#6e5236'),T))}if(x%3===0)P(g,x,y0-1,mul('#6e9a44',T))}
+[[74,154,7,4],[108,152,9,5],[140,155,6,3]].forEach(([x,y,rx,ry])=>{blob(g,x,y,rx,ry,mul('#8a867c',T));for(let i=0;i<4;i++)P(g,x-rx-2+((t*14+i*5)%(rx*2+4)),y+ry-1+(i%2),'rgba(255,255,255,.7)')});
+[[12,0],[50,1],[96,0],[130,1]].forEach(([x,k])=>{for(let i=0;i<6;i++){P(g,x+i*.6,bankY(x)-1-i,mul('#4e8a3a',T));P(g,x-i*.6,bankY(x)-1-i*.8,mul('#6aa04a',T))}})}
+function drawPier(g,T){for(let y=160;y<FH;y++)for(let x=0;x<66;x++){const pl=Math.floor(x/7);P(g,x,y,mul(x%7===6?'#4a3020':((y+pl*3)%9===0?'#7a5234':'#8a6040'),T))}R(g,0,160,66,1,mul('#a87850',T));[6,34].forEach(x=>R(g,x,154,3,6,mul('#5a3a22',T)));R(g,62,152,3,8,mul('#5a3a22',T));R(g,61,151,5,1,mul('#7a5234',T))}
+function drawFishing(g,t){if(!F)return;g.save();g.translate(0,FOFF);drawFishingS(g,t);g.restore();const y0=FOFF+FH,H=g.canvas.height;if(y0<H&&F.spot===4){const T=TINT[band(S.min)];for(let y=y0;y<H;y++)for(let x=0;x<FW;x++){const h=hsh(x,y);P(g,x,y,mul(h%13===0?'#f0e0b0':h%17===0?'#b89a68':'#e2ca92',T))}}
+else if(y0<H&&(F.spot===5||F.spot===6)){const T=TINT[band(S.min)];for(let y=y0;y<H;y++)for(let x=0;x<FW;x++){const h=hsh(x,y),k=y-y0;P(g,x,y,mul(F.spot===5?(h%9===0?'#9a9a92':(x+Math.floor(k/10)*6)%14===0||k%10===5?'#86867e':'#a8a8a0'):((x+Math.floor(k/7)*11)%23===0||k%7===6?'#8a6040':'#b08050'),T))}}
+else if(y0<H&&F.spot===2){const bb=band(S.min),T=TINT[bb],w=SPOTS[2].water.map(x=>mix(mul(x,T),WAT[bb][1],bb==='昼'?.15:.4)),wc=w[3];for(let y=y0;y<H;y++)for(let x=0;x<FW;x++){const h=hsh(x,y);P(g,x,y,h%7===0?mix(wc,mul('#d8d0b8',T),.35):h%11===0?mix(wc,mul('#9a968a',T),.35):wc)}for(let i=0;i<10;i++)R(g,((i*37+t*10)%(FW+10))-5,y0+4+(i*13)%Math.max(6,H-y0-6),5,1,'rgba(255,255,255,.4)')}
+else if(y0<H&&F.spot===1){const T=TINT[band(S.min)];for(let y=y0;y<H;y++)for(let x=0;x<FW;x++){const h=((x*73856093)^(y*19349663))>>>0;P(g,x,y,mul(h%11===0?'#5a4430':h%23===0?'#8a867c':'#6e5236',T))};for(let x=4;x<FW;x+=11)for(let i=0;i<4;i++)P(g,x+(i%2),y0+6+((x*3)%(Math.max(8,H-y0-10)))-i,mul('#5e8a3a',T))}
+else if(y0<H){const b=band(S.min),T=TINT[b],si=F.spot,w=SPOTS[si].water.map(x=>mix(mul(x,T),WAT[b][1],b==='昼'?.15:.4)),k=si+b+'_'+(H-y0);
+if(!fWat[k]){const c=mkc(FW,H-y0);grad(c.getContext('2d'),0,0,FW,H-y0,[w[3],mix(w[3],'#000000',.25)]);fWat[k]=c}g.drawImage(fWat[k],0,y0);
+const w0=mul(SPOTS[si].water[0],T);g.globalAlpha=.4;for(let i=0;i<14;i++){const sp=si===1?14:2.5,x=((i*41+t*sp*(si===1||i%2?1:-1))%(FW+20)+FW+20)%(FW+20)-10;R(g,x,y0+3+(i*19)%Math.max(4,H-y0-6),si===1?6:3,1,w0)}g.globalAlpha=1;
+[6,34,62].forEach(x=>{R(g,x,y0,3,8,mul('#4a2e1a',T));g.globalAlpha=.5;const rr=3+((t*3+x)%4);for(let a=0;a<6.28;a+=.5)P(g,x+1+Math.cos(a)*rr,y0+8+Math.sin(a)*rr*.35,w0);g.globalAlpha=1});R(g,0,y0,66,2,mul('#3a2414',T))}}
+/* ---- 釣り場ごとの景色 ---- */
+const spC={};const hsh=(x,y)=>((x*73856093)^(y*19349663))>>>0;
+function topExtra(g,si,b,T,O){const B=HZ+O-1,r=rng(si*5+9);
+if(si===0){R(g,28,B-9,14,8,mul('#a8784a',T));R(g,28,B-9,14,1,mul('#c8986a',T));R(g,26,B-13,18,4,mul('#b84a3a',T));R(g,28,B-15,14,2,mul('#c85a4a',T));R(g,33,B-6,4,5,mul('#4a3020',T));R(g,38,B-8,3,3,mul(b==='夜'||b==='夕'?'#ffe8a0':'#f0d890',b==='夜'?'#ffffff':T));
+R(g,118,B-16,2,16,mul('#5a4030',T));for(let i=0;i<9;i++){const x=110+i*2.2;for(let y=0;y<14-Math.abs(i-4)*1.2;y++)P(g,x+Math.sin(y*.3)*.5,B-20+y+Math.abs(i-4),mul(y%3?'#6a9a44':'#88b45a',T))}}
+if(si===2){const top=x=>Math.round(B-24-Math.min(14,Math.abs(x-97)*.22)+Math.sin(x*.3)*1.5),tree=(x,base,h,col,lt)=>{const t0=base-h;for(let y=t0;y<=base;y++){const k=y-t0,hw=Math.floor(k*.3+(k%4)*.5);for(let dx=-hw;dx<=hw;dx++)P(g,x+dx,y,dx===-hw&&k>1?lt:col)}};
+for(let x=66;x<=128;x++){const q=(x-97)/31,hy=Math.round(B-27-14*Math.sqrt(Math.max(0,1-q*q)));for(let y=hy;y<=B-20;y++)P(g,x,y,mul(((x*5+y*7)%13===0)?'#3a6a50':'#30604a',T));if(x%3===0)for(let k=0;k<4;k++){const hw=Math.floor(k*.5);for(let dx=-hw;dx<=hw;dx++)P(g,x+dx,hy-3+k,mul('#30604a',T))}}
+R(g,96,B-38,2,13,mul('#cfe6f6',T));
+for(let x=0;x<FW;x++){const t0=top(x);for(let y=t0;y<=B;y++)P(g,x,y,mul(((x*7+y*13)%17===0)?'#2a5238':'#22443a',T))}
+for(let row=0;row<6;row++)for(let x=-4;x<FW+4;x+=2+Math.floor(r()*3)){if(Math.abs(x-97)<11)continue;const base=top(x)+3+row*5;if(base>B+2)continue;tree(x,base,6+Math.floor(r()*5),mul(row%2?'#2a5236':'#1e4032',T),mul(row?'#3a6644':'#46784c',T))}
+for(let x=84;x<=110;x++){const ct=Math.round(B-27+Math.abs(x-97)*.12+(x%3?0:1));for(let y=ct;y<=B;y++){const edge=Math.abs(x-97)>10;P(g,x,y,mul(edge?'#5a5a52':((x*5+y*3)%7===0)?'#5e5a50':((x+y)%5===0)?'#8a867a':'#76726a',T))}}
+for(let x=84;x<=110;x++)if(Math.abs(x-97)>9){const ct=Math.round(B-27+Math.abs(x-97)*.12);for(let k=0;k<3;k++)P(g,x,ct+k,mul('#3e6a40',T))}
+R(g,93,B-25,8,26,mul('#d4eaf8',T));R(g,95,B-25,2,26,mul('#ffffff',T));R(g,92,B-26,10,2,mul('#ffffff',T))}
+if(si===5){const lit=b==='夜'||b==='夕';R(g,0,B-3,FW,4,mul('#7a7a76',T));let x=0;while(x<FW){const w=8+Math.floor(r()*10),h=6+Math.floor(r()*14),c=['#c8b8a0','#a8b0b8','#d8c8b0','#9aa0a8','#b8a088'][Math.floor(r()*5)];R(g,x,B-3-h,w-1,h,mul(c,T));R(g,x,B-3-h,w-1,2,mul(['#8a4a3a','#4a5a6a','#6a6a6a'][Math.floor(r()*3)],T));for(let wy=B-h;wy<B-5;wy+=3)for(let wx=x+2;wx<x+w-3;wx+=3)P(g,wx,wy,lit&&r()<.6?'#ffe08a':mul('#5a6a7a',T));x+=w}
+[[30,26],[70,22]].forEach(([cx,h])=>{R(g,cx,B-3-h,2,h,mul('#c84a3a',T));line(g,cx,B-3-h,cx+22,B-3-h-4,0,mul('#c84a3a',T));line(g,cx+18,B-3-h-3,cx+18,B-12,0,mul('#3a3a3a',T))});R(g,146,B-20,4,17,mul('#e8e0d0',T));R(g,146,B-20,4,3,mul('#c84a3a',T));if(lit&&Math.floor(Date.now()/1000)%2)R(g,146,B-22,4,2,'#fff6c0')}
+if(si===6){for(let x=20;x<64;x++){const h=Math.round(Math.max(0,7-Math.abs(x-40)*.45)+Math.max(0,3-Math.abs(x-30)*.3));if(h>0)R(g,x,55+O-h,1,h,mul('#6a7a96',T))}R(g,120,55+O-3,10,2,mul('#5a6a86',T));R(g,124,55+O-5,3,2,mul('#5a6a86',T))}
+if(si===3){for(let x=0;x<FW;x++){const y1=Math.round(36+O+nz(x,1.7)),lim=36+O-2;if(y1<lim){const n=Math.round((lim-y1)*.7)+1;for(let k=0;k<n;k++)P(g,x,y1+k,mix(mul('#f4f8ff',T),FAR[b],k/n*.8))}}
+for(let x=24;x<64;x++){const h=Math.round(5-Math.abs(x-44)*.24);if(h>0)R(g,x,B-h-1,1,h,mul('#3a5a44',T))}}}
+function midExtra(g,si,b,T,t){
+if(si===0){const k='pb'+b;if(!spC[k]){const c=mkc(FW,16),e=c.getContext('2d');for(let x=0;x<FW;x++){const ty=Math.round(8+Math.sin(x*.11)*2+Math.sin(x*.37));for(let y=0;y<ty;y++){const h=hsh(x,y);P(e,x,y,mul(y>=ty-1?'#6a6a50':h%9===0?'#4e7e3e':'#5e8e46',T))}R(e,x,ty,1,2,'rgba(10,30,30,.2)')}
+for(let x=4;x<FW;x+=6){const h=4+(x*7)%5,by=Math.round(9+Math.sin(x*.11)*2);for(let y=0;y<h;y++)P(e,x,by-y,mul('#4a7a3a',T));R(e,x,by-h-2,1,3,mul('#7a4a2a',T))}spC[k]=c}g.drawImage(spC[k],0,HZ)}
+if(si===2){[[30,96,9,5],[72,104,6,3],[120,92,11,6],[146,122,8,4],[100,138,7,3]].forEach(([x,y,rx,ry])=>{blob(g,x,y,rx,ry,mul('#9a968a',T));R(g,x-rx+2,y-ry,rx,1,mul('#6a9a4a',T));for(let i=0;i<5;i++)P(g,x-rx-3+((t*16+i*7)%(rx*2+8)),y+ry-1+(i%2),'rgba(255,255,255,.8)')});
+for(let y=HZ-25;y<HZ;y++)if(((y+Math.floor(t*30))%6)<2){P(g,94,y,'rgba(200,230,255,.9)');P(g,98,y+2,'rgba(200,230,255,.7)')}for(let i=0;i<10;i++)P(g,90+((t*20+i*3)%14),HZ+1-((t*9+i*5)%4),'rgba(255,255,255,.9)')}
+if(si===3){for(let i=0;i<2;i++){const x=((t*5+i*80)%(FW+20))-10,y=20+i*6,c=mul('#3a3a44',T);P(g,x-1,y,c);P(g,x,y+1,c);P(g,x+1,y,c)}
+const by=Math.round(163+Math.sin(t*1.5)*1);R(g,78,by,26,4,mul('#7a4a2a',T));R(g,80,by+4,22,2,mul('#5a3418',T));R(g,78,by,26,1,mul('#a8784a',T));R(g,82,by+1,18,2,mul('#4a2a14',T));R(g,88,by+1,2,2,mul('#a8784a',T));R(g,96,by+1,2,2,mul('#a8784a',T));g.globalAlpha=.25;R(g,80,by+7,22,2,mul('#3a2414',T));g.globalAlpha=1;line(g,66,162,78,by+1,1,mul('#c8b890',T))}
+if(si===5){[[104,88,'#e8e8f0','#3a6ab8'],[24,82,'#c84a3a','#e8e8f0']].forEach(([x,y,c1,c2],k)=>{const by=Math.round(y+Math.sin(t*1.4+k)*1);R(g,x,by,22,4,mul(c1,T));R(g,x+2,by+4,18,2,mul(c2,T));R(g,x+12,by-5,7,5,mul('#e8e8f0',T));R(g,x+13,by-4,2,2,mul('#5a8ab8',T));R(g,x+16,by-11,1,6,mul('#3a3a3a',T));g.globalAlpha=.25;R(g,x+2,by+7,18,2,mul(c1,T));g.globalAlpha=1});[[64,100],[140,110]].forEach(([x,y],k)=>{R(g,x,y+Math.round(Math.sin(t*2+k)),3,3,'#e8602a');P(g,x+1,y-1+Math.round(Math.sin(t*2+k)),'#ffffff')})}
+if(si===4||si===5||si===6){for(let i=0;i<3;i++){const x=((t*(8+i*3)+i*60)%(FW+20))-10,y=14+i*9+Math.sin(t*2+i)*2,f=Math.floor(t*4+i)%2,c=b==='夜'?'#8a96c0':'#ffffff';P(g,x-2,y-f,c);P(g,x-1,y-1+f,c);P(g,x,y,c);P(g,x+1,y-1+f,c);P(g,x+2,y-f,c)}}}
+function drawQuay(g,T){for(let y=150;y<FH;y++)for(let x=0;x<FW;x++){const k=y-150,h=hsh(x,y);let c=k<3?'#6a6a66':k<5?'#e8c84a':((x+Math.floor(k/10)*6)%14===0||k%10===5)?'#86867e':h%9===0?'#9a9a92':'#a8a8a0';if(k===0)c='#4a4a48';P(g,x,y,mul(c,T))}
+R(g,58,144,6,7,mul('#2a2a2e',T));R(g,57,143,8,2,mul('#3a3a40',T));R(g,59,145,1,5,mul('#4a4a52',T));
+for(let a=0;a<6.28;a+=.4){P(g,120+Math.cos(a)*4,170+Math.sin(a)*2,mul('#c8b890',T))}R(g,8,152,6,4,mul('#2a2a2e',T));R(g,140,152,6,4,mul('#2a2a2e',T))}
+function drawDeck(g,T,t){const bob=Math.round(Math.sin(t*1.3)*1);for(let y=148+bob;y<FH;y++)for(let x=0;x<FW;x++){const k=y-148-bob;let c=k<2?'#f4f4f8':k<4?'#3a6ab8':k<6?'#d8d8e0':((x+Math.floor(k/7)*11)%23===0||k%7===6)?'#8a6040':'#b08050';P(g,x,y,mul(c,T))}
+for(let x=4;x<FW;x+=18)R(g,x,140+bob,2,8,mul('#c8c8d0',T));R(g,0,140+bob,FW,2,mul('#e8e8f0',T));R(g,110,158+bob,22,10,mul('#3a7ab8',T));R(g,110,158+bob,22,2,mul('#e8e8f0',T));R(g,70,166+bob,8,6,mul('#5a5a62',T));P(g,73,163+bob,mul('#c8c8d0',T))}
+function drawRocks(g,T,t){[[60,178,22,10],[4,166,10,7],[22,172,26,12]].forEach(([x,y,rx,ry])=>blob(g,x,y,rx,ry,mul('#8a867c',T)));R(g,6,161,40,2,mul('#aaa69a',T));R(g,10,160,30,1,mul('#6a9a4a',T));R(g,40,166,6,1,mul('#6a9a4a',T));
+for(let i=0;i<6;i++)P(g,48+((t*10+i*5)%26),170+(i%3),'rgba(255,255,255,.7)')}
+function beachY(x){return Math.round(152+Math.sin(x*.05)*2.5)}
+function drawBeach(g,T,t){const wash=Math.round(Math.sin(t*1.1)*3);for(let x=0;x<FW;x++){const y0=beachY(x);for(let y=y0;y<FH;y++){const k=y-y0,h=hsh(x,y);P(g,x,y,mul(k<4?'#c4aa78':h%13===0?'#f0e0b0':h%17===0?'#b89a68':'#e2ca92',T))}
+const fy=y0-1+wash;P(g,x,fy,'rgba(255,255,255,.85)');if(Math.sin(x*.3+t)>0)P(g,x,fy-1,'rgba(255,255,255,.45)')}
+blob(g,128,166,9,4,mul('#7a7a80',T));blob(g,140,170,5,3,mul('#8a8a90',T));[[96,170,'#f4d0c0'],[110,175,'#ffe8d0'],[70,174,'#f8c0b0']].forEach(([x,y,c])=>{P(g,x,y,mul(c,T));P(g,x+1,y,mul(c,T));P(g,x,y-1,mul(c,T))})}
+function lantern(g,x,y,T,b){const lit=b==='夜'||b==='夕';P(g,x+1,y-2,'#3a3a3a');P(g,x+2,y-2,'#3a3a3a');P(g,x,y-1,'#3a3a3a');P(g,x+3,y-1,'#3a3a3a');R(g,x,y,4,5,mul('#2a2a2a',T));R(g,x+1,y+1,2,3,lit?'#fff6c0':mul('#f8e4a0',T));R(g,x,y+5,4,1,mul('#4a4a4a',T))}
+function drawFishingS(g,t){const si=F.spot,b=band(S.min),T=TINT[b],p=F.phase;
+g.drawImage(fishTop(si,b),0,-FOFF);skyLife(g,b,t,FW,si===2?16:22);if(si===4&&(b==='夜'||b==='夕')&&t%2<1){g.globalCompositeOperation='lighter';glow(g,122,43,8,.12,'255,230,150');g.globalCompositeOperation='source-over'}
+g.drawImage(fishWater(si,b),0,HZ);for(let k=0;k<34;k++){const sy=HZ-1-Math.floor(k*1.3);if(sy<0)break;g.globalAlpha=Math.max(0,.5-k*.015);g.drawImage(g.canvas,0,sy+FOFF,FW,1,Math.round(Math.sin(k*.8+t*2)*(.4+k*.04)),HZ+k,FW,1)}g.globalAlpha=1;
+const w0=mul(SPOTS[si].water[0],T);g.globalAlpha=.5;for(let i=0;i<(si===1?40:22);i++){const sp=si===1?14:2.5,x=((i*37+t*sp*(si===1||i%2?1:-1))%(FW+20)+FW+20)%(FW+20)-10;R(g,x,HZ+4+(i*29)%(FH-HZ-24),si===1?6:3,1,w0)}
+g.globalAlpha=si===6?.32:.22;if(si===4||si===6)for(let i=0;i<4;i++){const y=HZ+((t*6+i*30)%(FH-HZ));for(let x=0;x<FW;x++)if(Math.sin(x*.21+i*2)+Math.sin(x*.07+t)>.9)P(g,x,y,'#ffffff')}g.globalAlpha=1;
+for(let x=0;x<FW;x++)if(Math.sin(x*.4+t*1.5)>-.3)P(g,x,HZ,'rgba(240,235,220,.4)');
+midExtra(g,si,b,T,t);if(si===1){g.drawImage(riverBank(b,T),0,HZ);for(let i=0;i<3;i++){const fx=[34,96,126][i];for(let k=0;k<3;k++)P(g,fx+6+((t*12+k*4)%10),HZ+32+k%2,'rgba(255,255,255,.75)')}}
+const tip=[59,126];
+if(p==='hit'){const bb=Math.round(Math.abs(Math.sin(t*10))*-3);R(g,CX-2,CY-19+bb,5,9,'#3a2414');R(g,CX-2,CY-8+bb,5,4,'#3a2414');R(g,CX-1,CY-18+bb,3,7,'#ffcf4a');R(g,CX-1,CY-7+bb,3,2,'#ffcf4a');P(g,CX-1,CY-18+bb,'#fff6c0')}
+if(p==='wait'||p==='hit'){const bob=p==='hit'?2:Math.round(Math.sin(t*3));for(let a=0;a<6.28;a+=.35){const rr=4+((t*5)%6);P(g,CX+Math.cos(a)*rr,CY+2+Math.sin(a)*rr*.5,w0)}line(g,tip[0],tip[1],CX,CY-2+bob,4,'rgba(255,255,255,.75)');R(g,CX-1,CY-2+bob,3,2,'#ffffff');R(g,CX-1,CY+bob,3,2,'#e04a3a')}
+if(p==='play'){const Rr=16*(1+S.eq.reel*0.06);for(let a=0;a<6.28;a+=.12)P(g,CX+Math.cos(a)*Rr,CY+Math.sin(a)*Rr,(Math.floor(a*4+t*6)%2)?'#ffffff':'#ffe27a');
+for(let a=0;a<6.28;a+=.4)P(g,CX+Math.cos(a)*Rr*.3,CY+Math.sin(a)*Rr*.3,'rgba(255,255,255,.7)');P(g,CX,CY,'#ffe27a');
+const s=4+F.fish.r,dir=(F.vx||1)>0?1:-1;g.fillStyle='rgba(8,16,32,.62)';for(let y=-s*.5;y<=s*.5;y++)for(let x=-s;x<=s;x++)if((x/s)**2+(y/(s*.5))**2<=1)g.fillRect(Math.round(F.x+x),Math.round(F.y+y),1,1);
+const tw=Math.sin(t*14)*1.5;for(let k=0;k<4;k++)g.fillRect(Math.round(F.x-dir*(s+k)),Math.round(F.y-k*.6+tw*k/4),1,Math.max(1,k*1.2+1)|0);
+line(g,tip[0],tip[1],F.x+dir*s*.7,F.y,(1-F.g/120)*5,F.thr>0?'#ffd0c0':'rgba(255,255,255,.85)');
+if(F.thr>0)for(let k=0;k<6;k++)P(g,F.x+Math.cos(k+t*20)*(s+3),F.y+Math.sin(k+t*20)*(s*.5+2),'#ffffff');
+if(F.rip>0){F.rip-=1/60;const rr=(0.4-F.rip)*40;for(let a=0;a<6.28;a+=.3)P(g,CX+Math.cos(a)*rr,CY+Math.sin(a)*rr,'rgba(255,255,255,.6)')}}
+if(p==='idle'||p==='done'){line(g,tip[0],tip[1],tip[0]+1,tip[1]+8,0,'rgba(255,255,255,.7)');R(g,tip[0],tip[1]+8,3,2,'#ffffff');R(g,tip[0],tip[1]+10,3,2,'#e04a3a')}
+if(si===1)drawBank(g,T,t);else if(si===2)drawRocks(g,T,t);else if(si===4)drawBeach(g,T,t);else if(si===5)drawQuay(g,T);else if(si===6)drawDeck(g,T,t);else drawPier(g,T);sprC(g,true,charPal(S.look2,T),24,145-(p==='hit'?1:0),S.look2);line(g,35,155,tip[0],tip[1],0,mul('#7a5a3a',T));R(g,33,153,2,3,mul('#3a3a3a',T));
+lantern(g,38,(si===1?bankY(40):si===4?beachY(40)+6:si===2?156:155),T,b);if(b==='夕'||b==='夜'){const ly=(si===1?bankY(40):si===4?beachY(40)+6:si===2?156:155)+2;g.globalCompositeOperation='lighter';glow(g,40,ly,16,b==='夜'?.06:.03,'255,210,120');g.globalCompositeOperation='source-over'}}
+const TL=8,TR=111,TT=14,TB=78;const tst=(x,si)=>Math.round(71+Math.sin(x*.13+si)*1.4);
+const tankCache={};
+function tankBg(si){if(tankCache[si])return tankCache[si];const c=mkc(120,96),g=c.getContext('2d'),sp=SPOTS[si],w=sp.water,gr=sp.ground,r=rng(si*101+3);
+for(let y=TT;y<=TB;y++){const f=(y-TT)/(TB-TT)*3.99,i=Math.floor(f);for(let x=TL;x<=TR;x++){let k=i;if(f-i>.7&&(x+y)%2===0)k=Math.min(3,i+1);P(g,x,y,w[k]);if(si===2&&(x+Math.floor(y*.6))%24<2&&(x+y)%2===0)P(g,x,y,'#ffffff')}}
+R(g,TL,TT,TR-TL+1,1,'#ffffff');R(g,TL,10,TR-TL+1,4,'#e8f8ff');
+for(let x=TL;x<=TR;x++)for(let y=tst(x,si);y<=TB;y++){const v=r();P(g,x,y,v<.15?gr[1]:v<.25?gr[2]:gr[0])}
+const rock=(cx,cy,rx,ry,b)=>{for(let y=cy-ry-1;y<=cy+ry+1;y++)for(let x=cx-rx-1;x<=cx+rx+1;x++){const d=((x-cx)/rx)**2+((y-cy)/ry)**2;if(d<=1)P(g,x,y,(y-cy)/ry>.35?b[1]:((x-cx)/rx<-.2&&(y-cy)/ry<-.3)?b[2]:b[0]);else if(d<=1.35&&y<=cy+ry)P(g,x,y,'#3b3550')}};
+const RC=['#9b97b0','#76728d','#c4c0d6'];
+if(si===0){rock(96,70,6,4,RC);for(let i=0;i<4;i++)R(g,26+i*14,TT,7,1,'#4a9a3a');R(g,30,TT-1,3,1,'#ff9ab8')}
+if(si===1){rock(22,68,8,5,RC);rock(31,70,4,3,RC);rock(92,69,6,4,RC)}
+if(si===2){for(let i=0;i<30;i++)R(g,TL+r()*100,tst(50,si)+1+r()*6,2,1,['#ff9eb5','#9fe0c8','#c7b8ff','#ffffff','#a8a088'][i%5]);rock(90,70,5,3,RC)}
+if(si===3){R(g,64,tst(64,si)-3,34,3,'#7a5634');R(g,64,tst(64,si)-3,34,1,'#9a7650');rock(20,69,7,4,['#7a7468','#5a5448','#9a9488'])}
+if(si===4){const cy=tst(80,si);[[0,-9],[-3,-6],[3,-7],[-5,-4],[5,-4]].forEach(([dx,h])=>{for(let k=0;k>h;k--)P(g,80+dx*Math.min(1,-k/3),cy+k,'#ff7f9e');P(g,80+dx,cy+h,'#ffb3c4')});rock(22,68,7,4,RC);R(g,40,tst(40,si)+1,3,1,'#ffe1c2');P(g,41,tst(40,si),'#ffe1c2')}
+tankCache[si]=c;return c}
+function drawTank(g,t,si){g.clearRect(0,0,120,96);R(g,TL-2,8,TR-TL+5,2,'#2d3a4a');g.drawImage(tankBg(si),0,0);
+const gc=['#3fa34d','#7fd65c'];const WE=[[13,22],[16,30],[19,18],[104,20],[108,26],[50,12]];
+WE.forEach(([bx,h],k)=>{if(si===4&&k===5)return;const by=tst(bx,si);for(let i=0;i<h;i++){const sx=bx+Math.sin(t*1.6+k+i*.28)*i*.11;P(g,sx,by-i,si===3?'#2f7a4a':gc[0]);P(g,sx+1,by-i,gc[i%3?0:1])}});
+if(si===4){const AX=58,AY=tst(58,si);for(let i=0;i<13;i++){const a=-Math.PI/2+(i-6)*.2,len=6+i%3;for(let s=1;s<=len;s++)P(g,AX+Math.cos(a)*s*1.1+Math.sin(t*2+i*.7)*s*.12,AY-2+Math.sin(a)*s,s===len?'#ff6fa8':'#ffc89a')}for(let x=-6;x<=6;x++){const h=Math.round(2.5*Math.sqrt(1-(x/6.5)**2));for(let y=0;y<h;y++)P(g,AX+x,AY-y,'#b06a8c')}}
+aqFish.forEach(f=>{const spr=fishSprite(f.id);f.x+=f.dir*f.sp*(1/60);if(f.x>TR-12){f.dir=-1}if(f.x<TL+12){f.dir=1}const y=clamp(f.y+Math.sin(t*1.2+f.ph)*3,TT+4,62);const dx=Math.round(f.x-11),dy=Math.round(y-7);
+g.save();if(f.dir<0){g.translate(dx*2+22,0);g.scale(-1,1)}g.drawImage(spr,dx,dy);g.restore()});
+const bx=100,by=tst(100,si);for(let i=0;i<5;i++){const yy=by-3-((t*9+i*12)%(by-TT-4));P(g,bx+Math.sin(t*4+i)*.8,yy,'#e8fbff')}
+for(let x=TL;x<=TR;x++)if(Math.sin(x*.5+t*2.5)>.6)P(g,x,TT,'#ffffff');
+g.fillStyle='rgba(255,255,255,.35)';for(let k=0;k<7;k++)g.fillRect(TL+3+k,TT+3+k*2,1,2);
+R(g,TL-2,11,1,TB-9,'#2d3a4a');R(g,TR+2,11,1,TB-9,'#2d3a4a');R(g,TL-1,11,1,TB-9,'#a9dff0');R(g,TR+1,11,1,TB-9,'#a9dff0');
+R(g,TL-3,TB+1,TR-TL+7,1,'#2d3a4a');R(g,TL-3,TB+2,1,9,'#2d3a4a');R(g,TR+3,TB+2,1,9,'#2d3a4a');R(g,TL-3,TB+11,TR-TL+7,1,'#2d3a4a');
+R(g,TL-2,TB+2,TR-TL+5,2,'#c98b55');R(g,TL-2,TB+4,TR-TL+5,7,'#a86a3c');for(let x=TL+4;x<TR;x+=9)R(g,x,TB+6,4,1,'#8a5530');
+if(!aqFish.length){g.fillStyle='rgba(0,0,0,.25)';g.fillRect(TL,40,TR-TL+1,12);g.fillStyle='#fff';g.font='8px DotGothic16, monospace';g.textAlign='center';g.fillText('まだ魚がいません',60,49)}}
+function drawTitle(g,t){g.clearRect(0,0,64,40);R(g,0,0,64,40,'#24346a');for(let y=26;y<40;y++)R(g,0,y,64,1,['#3a76bc','#2e64a4','#24508a'][Math.min(2,Math.floor((y-26)/5))]);
+[[8,6],[20,4],[50,8],[40,3],[58,12]].forEach(([x,y],i)=>P(g,x,y,(Math.floor(t*2)+i)%3?'#fff6c0':'#5a6aa0'));R(g,48,4,4,4,'#fff3b0');
+const fx=Math.round(21+Math.sin(t)*4),fy=Math.round(22+Math.sin(t*2)*1.5);g.drawImage(fishSprite(9),fx,fy);
+for(let x=0;x<64;x++)if(Math.sin(x*.6+t*3)>.5)P(g,x,26,'#ffffff')}
+
+let last=performance.now(),T=0;
+function loop(now){const dt=Math.min((now-last)/1000,.05);last=now;T+=dt;
+if($('#title').style.display!=='none'){drawTitle($('#tcv').getContext('2d'),T)}
+const cv=$('#cv');if(cv&&cvMode){const g=cv.getContext('2d');if(cvMode==='home')drawHomeFull(g,T);else if(cvMode==='closet')drawCloset(g,T);else if(cvMode==='aq')drawAq(g,T,dt);else if(cvMode==='island')drawIsland(g,T);else if(cvMode==='mini'){fishStep(dt);drawMini(g,T)}else if(cvMode==='fish'){fishStep(dt);drawFishing(g,T)}}
+requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+
+/* ---------- 操作 ---------- */
+function sellAll(){const v=S.inv.reduce((s,c)=>s+priceOf(FISH[c.id],c.size),0);S.coins+=v;S.inv=[];se('coin');toast(`${v.toLocaleString()}コインになった`);save();render()}
+const wakeToday=m=>S.min<m;
+function sleepTo(i){const m=WAKE[i][1];if(wakeToday(m)){S.min=m}else{S.day++;S.min=m;S.today=[];S.quests=genQuests(S.day,S.unl,m)}save();closeModal();scr='home';render();toast(`${S.day}日目 ${fmt(m)} に起きた`)}
+function settings(){modal(`<h2>${ico('gear',1)}設定</h2><label>BGM音量<input type="range" id="sBgm" min="0" max="1" step="0.1" value="${S.set.bgm}"></label><label>効果音音量<input type="range" id="sSe" min="0" max="1" step="0.1" value="${S.set.se}"></label><label>環境音（釣り場）<input type="range" id="sAmb" min="0" max="1" step="0.1" value="${S.set.amb??.7}"></label>
+<div class="btns" style="margin:10px 0"><button class="wb" data-act="save">データ保存</button><button class="wb" data-act="load">データ読み込み</button><button class="wb" data-act="copycode">セーブコードをコピー</button><button class="wb" data-act="reset">最初からやり直す</button></div>
+<div style="border:2px dashed #b08a5a;padding:8px;margin:0 0 10px"><p style="margin:0 0 6px">開発用</p><button class="wb big${DEV()?' on':''}" data-act="dev">全開放モード：${DEV()?'オン':'オフ'}</button>${DEV()?'<div class="btns" style="margin:6px 0 0"><button class="wb sm" data-act="devcoin">＋10,000コイン</button><button class="wb sm" data-act="devtime">時間を＋1時間</button></div>':''}<p class="muted" style="margin:6px 0 0">オンの間は全釣り場・全釣り具・全50種の魚（図鑑と水族館）が開放されます。オフにすると元のデータに戻ります。</p></div>
+<p class="muted">別の端末に移すときは、セーブコードを貼り付けて読み込みます。</p><textarea id="code" placeholder="セーブコードを貼り付け"></textarea><button class="wb big" data-act="loadcode" style="margin:8px 0">コードから読み込む</button><button class="wb big" data-act="close">閉じる</button>`);
+$('#sBgm').oninput=e=>{S.set.bgm=+e.target.value;save()};$('#sSe').oninput=e=>{S.set.se=+e.target.value;se('tap');save()};$('#sAmb').oninput=e=>{S.set.amb=+e.target.value;save()}}
+function useData(d,msg){if(!d||!d.v||!d.day){toast('データを読み込めませんでした');return}S=Object.assign(fresh(),d);closeModal();$('#title').style.display='none';scr='home';F=null;render();toast(msg)}
+const A={
+go:v=>go(v),settings,close:closeModal,
+claim:i=>{const q=S.quests[i];if(q.got||!qInfo(q).ok)return;q.got=1;S.coins+=q.rw;se('coin');toast(`${q.rw}コインを受け取った`);save();render()},
+sleep:()=>modal(`<h2>${ico('moon',1)}いつまで寝る？</h2><p class="muted">今は ${fmt(S.min)}。翌日まで寝ると日付が進み、依頼が新しくなります。</p>${WAKE.map((w,i)=>`<button class="wb big" style="margin-bottom:8px" data-act="sleepto" data-v="${i}">${w[0]}（${wakeToday(w[1])?'今日':'明日'} ${fmt(w[1])}）</button>`).join('')}<button class="wb big" data-act="close">やめる</button>`),
+sleepto:i=>sleepTo(+i),sellall:sellAll,
+unlock:i=>{const s=SPOTS[i];if(S.coins<s.cost){toast(`コインが足りません（あと${(s.cost-S.coins).toLocaleString()}）`);se('bad');return}S.coins-=s.cost;S.unl[s.id]=1;se('coin');toast(`${s.name}を解放した`);save();render()},
+fish:i=>{S.lastSpot=+i;save();F={spot:+i,phase:'idle',g:50};go('fishing')},
+cast:()=>cast(),
+sellnow:()=>{const c=F.last,v=priceOf(FISH[c.id],c.size);S.coins+=v;se('coin');toast(`${v}コインになった`);closeModal();save();updTop()},
+keep:()=>{S.inv.push(F.last);toast('クーラーボックスに入れた');closeModal();save()},
+aq:i=>{aqSpot=+i;render()},info:i=>info(+i),
+dxs:v=>{dexF.spot=+v;render()},dxr:v=>{dexF.r=+v;render()},tab:v=>{shopTab=v;render()},
+buy:i=>{const it=GEAR[shopTab].items[i];if(S.coins<it[2]){toast(`コインが足りません（あと${(it[2]-S.coins).toLocaleString()}）`);se('bad');return}S.coins-=it[2];S.own[shopTab].push(+i);S.eq[shopTab]=+i;se('coin');toast(`${it[0]}を買って装備した`);save();render()},
+equip:i=>{S.eq[shopTab]=+i;toast('装備を変更した');save();render()},
+save:()=>toast(save()?'保存しました':'この環境では保存できません。セーブコードを使ってください'),
+load:()=>{const d=loadLocal();d?useData(d,'読み込みました'):toast('保存データがありません')},
+copycode:()=>{const code=btoa(unescape(encodeURIComponent(JSON.stringify(S))));const ta=$('#code');ta.value=code;try{navigator.clipboard.writeText(code).then(()=>toast('コピーしました'),()=>toast('下の欄のコードを長押しでコピーしてね'))}catch(e){toast('下の欄のコードをコピーしてね')}},
+loadcode:()=>{try{useData(JSON.parse(decodeURIComponent(escape(atob($('#code').value.trim())))),'コードから読み込みました')}catch(e){toast('コードが正しくありません')}},
+reset:()=>modal(`<h2>最初からやり直す？</h2><p>今のデータは消えて、1日目からはじまります。元には戻せません。</p><div class="btns" style="margin:10px 0 0"><button class="wb" data-act="close">やめる</button><button class="wb gold" data-act="newgame">やり直す</button></div>`),
+fishgo:()=>{if(scr==='fishing'&&F)return;const i=(S.unl[SPOTS[S.lastSpot||0].id]||DEV())?(S.lastSpot||0):0;F={spot:i,phase:'idle',g:50};go('fishing')},
+cont:()=>{ac();const d=loadLocal();if(d)useData(d,'おかえりなさい');else toast('保存データがありません')},
+newgame:()=>{ac();closeModal();S=fresh();S.firstLook=1;F=null;save();$('#title').style.display='none';scr='closet';render();toast('まずは自分の姿を決めよう')},
+closet:()=>go('closet'),
+dev:()=>{S.dev=!S.dev;if(!S.dev)for(const k in S.eq)if(!S.own[k].includes(S.eq[k]))S.eq[k]=Math.max(...S.own[k]);save();render();settings();toast(S.dev?'全開放モード：オン':'全開放モード：オフ')},devcoin:()=>{S.coins+=10000;save();updTop();toast('10,000コインを追加した')},devtime:()=>{S.min=Math.min(MAXMIN-30,S.min+60);save();render();settings()},
+sellone:i=>{const c=S.inv[+i];if(!c)return;const v=priceOf(FISH[c.id],c.size);S.coins+=v;S.inv.splice(+i,1);se('coin');toast(`${FISH[c.id].name}を${v}コインで売った`);save();render()},
+aqmap:()=>aqMapOpen(),aqmapclose:()=>{mapOpen=false;const m=$('#aqMap');if(m)m.style.display='none'},aqgo:v=>{mapOpen=false;$('#aqMap').style.display='none';aqEnter(+v)},
+pq:v=>{if(!aqPQ)return;const n=aqPQ.ids.length;plaque(aqPQ.ids,(aqPQ.i+ +v+n)%n)},aqside:v=>{aqChar.tx=+v<0?4:AW-4;aqChar.ty=clamp(aqChar.y,AWY+14,AH-4)},
+aqall:()=>{aqAll=!aqAll;aqEnter(aqRoom);aqMapOpen()},
+lks:v=>{const[k,i]=v.split(':');S.look2[k]=+i;save();render()},
+lkr:()=>{for(const k in LOOKS)S.look2[k]=rnd(LOOKS[k]);S.look2.hs=rnd(HAIRSTY);save();render()},
+hs:d=>{const n=HAIRSTY.length;S.look2.hs=(((S.look2.hs||0)+ +d)%n+n)%n;save();render()},
+lkreset:()=>{S.look2={...LOOKDEF};save();render()},
+lkdone:()=>{const f=S.firstLook;delete S.firstLook;save();go('home');if(f)toast('1日目の朝。釣りに出かけよう！')}};
+const rnd=a=>Math.floor(Math.random()*a.length);
+document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;if(S&&b.dataset.act!=='cast')se('tap');A[b.dataset.act]?.(b.dataset.v)});
+document.addEventListener('contextmenu',e=>{if(!e.target.closest('input,textarea'))e.preventDefault()});
+document.addEventListener('pointerdown',e=>{if(cvMode==='fish'&&e.target.closest&&e.target.closest('#fsBox')&&!e.target.closest('button')){hookTap();return}
+if(e.target.id==='cv'){if(cvMode==='mini'){e.preventDefault();tapFish()}else if(cvMode==='aq')aqTap(e);else if(cvMode==='island')islTap(e)}});
+
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal'&&!$('#mbox').querySelector('[data-act=sellnow]'))closeModal()});
+{const d=loadLocal();$('#title').style.display='none';if(d){S=Object.assign(fresh(),d);scr='home';render()}else{S=fresh();S.firstLook=1;save();scr='closet';render();toast('まずは自分の姿を決めよう')}}
+document.addEventListener('pointerdown',()=>ac(),{once:true});
+}
+</script>
+</body>
+</html>
