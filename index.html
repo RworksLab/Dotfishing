@@ -184,7 +184,7 @@ const FD=`コイ|1|朝昼|10|30|70|n|#8a7a4a|#d8c89a|#6a5a30||池の主ともい
 白銀クエ|5|夜|140|80|150|r|#d8e0e8|#ffffff|#3a7ad0|m|銀白色の巨体に青い模様を持つ、特別なクエ。`;
 const FISH=FD.split('\n').map((l,i)=>{const a=l.split('|');return{i,name:a[0],r:+a[1],times:a[2],pow:+a[3],min:+a[4],max:+a[5],shape:a[6],c1:a[7],c2:a[8],c3:a[9],pat:a[10],desc:a[11],spot:Math.floor(i/10)}});
 const GEAR={rod:{label:'釣り竿',eff:'魚の抵抗を抑える（暴れにくく、逃げる勢いが弱まる）',items:[['木製の釣り竿',5,0],['竹製の釣り竿',15,650],['カーボンロッド',28,2300],['高性能カーボンロッド',42,7800],['マスターロッド',60,23000]]},
-reel:{label:'リール',eff:'回復量アップ、狙いの範囲が広がる',items:[['初心者リール',3,0],['スピニングリール',10,500],['高性能リール',18,2000],['プロリール',28,6500],['マスターリール',45,19500]]},
+reel:{label:'リール',eff:'回復量アップ、狙いの範囲が広がる（図の黄色がPERFECT、白い点線は最初のリールの範囲）',items:[['初心者リール',3,0],['スピニングリール',10,500],['高性能リール',18,2000],['プロリール',28,6500],['マスターリール',45,19500]]},
 line:{label:'釣り糸',eff:'時間経過と抵抗によるゲージ減少を軽減',items:[['麻の釣り糸',2,0],['ナイロンライン',8,400],['フロロカーボンライン',15,1600],['高強度PEライン',25,5200],['特殊強化ライン',40,15500]]}};
 const RW=[0,45,30,16,7,2],BASEP=[0,30,70,160,400,1000],SPM=[1,1.5,2.2,3,4,5,6.5];
 const WAKE=[['朝まで寝る',360],['昼まで寝る',720],['夕方まで寝る',1020],['夜まで寝る',1200]];
@@ -194,6 +194,7 @@ const MAXMIN=29*60+59;
 const hh=m=>Math.floor(m/60)%24;
 const fmt=m=>String(hh(m)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
 const band=m=>{const h=hh(m);return h>=6&&h<11?'朝':h>=11&&h<16?'昼':h>=16&&h<19?'夕':'夜'};
+const RING=lv=>13*(1+lv*0.1);
 const power=()=>GEAR.rod.items[S.eq.rod][1]+GEAR.reel.items[S.eq.reel][1]+GEAR.line.items[S.eq.line][1];
 const mark=rec=>{const p=power();return p>=rec?'◎':p>=rec*0.7?'△':'×'};
 const priceOf=(f,s)=>Math.round(BASEP[f.r]*SPM[f.spot]*(0.7+0.6*(s-f.min)/((f.max-f.min)||1)));
@@ -340,7 +341,7 @@ function go(s){if(scr==='fishing'&&F&&['wait','hit','play'].includes(F.phase)&&s
 function render(){aqAll=DEV();updTop();cvMode='';mapOpen=false;view.classList.toggle('full',scr==='aqua'||scr==='fishing'||scr==='home'||scr==='spots');({cooler:vCooler,closet:vCloset,home:vHome,spots:vSpots,fishing:vFishing,aqua:vAqua,dex:vDex,shop:vShop,quests:vQuests})[scr]();view.scrollTop=0}
 
 function questRows(){return S.quests.map((q,i)=>{const o=qInfo(q);return`<div class="row"><div><div><span class="tag" style="background:${['#4a9a4a','#d08a10','#c8403a'][i]}">${q.d}</span> ${o.txt}</div><div class="muted">${o.cur}/${o.need}・報酬 ${q.rw}コイン</div></div>${q.got?'<span class="muted">受取済</span>':o.ok?`<button class="wb sm gold" data-act="claim" data-v="${i}">受け取る</button>`:'<span class="muted">未達成</span>'}</div>`}).join('')}
-const DEV=()=>false;const VER='1.0.5';
+const DEV=()=>false;const VER='1.0.6';
 let HOFF=0,homeCv=null;const extC={};
 function vHome(){const inv=S.inv,ready=S.quests.filter(q=>!q.got&&qInfo(q).ok).length;
 view.innerHTML=`<div id="hmBox" style="position:relative;height:100%;overflow:hidden;background:#0c0f18">
@@ -498,7 +499,7 @@ function disc(g,cx,cy,r,col){g.fillStyle=col;for(let y=-r;y<=r;y++){const w=Math
 function drawMini(g,t){if(!F)return;const si=F.spot;g.drawImage(miniBg(si),0,0);
 g.globalCompositeOperation='lighter';for(let k=0;k<4;k++){const x=20+k*38+Math.sin(t*.5+k)*8;g.fillStyle='rgba(255,255,255,.05)';g.beginPath();g.moveTo(x,0);g.lineTo(x+12,0);g.lineTo(x+40,MH);g.lineTo(x+18,MH);g.fill()}g.globalCompositeOperation='source-over';
 for(let k=0;k<26;k++){const x=(k*53+Math.sin(t*.4+k)*6)%MW,y=(k*37+t*(2+k%3))%MH;P(g,x,y,'rgba(255,255,255,.25)')}
-const Rr=16*(1+S.eq.reel*0.06)*MS;disc(g,MCX,MCY,Rr,'rgba(200,230,255,.2)');disc(g,MCX,MCY,Rr*.65,'rgba(8,24,60,.22)');disc(g,MCX,MCY,Rr*.3,'rgba(200,230,255,.3)');
+const Rr=RING(S.eq.reel)*MS;disc(g,MCX,MCY,Rr,'rgba(200,230,255,.22)');disc(g,MCX,MCY,Rr*.65,'rgba(8,24,60,.24)');disc(g,MCX,MCY,Rr*.25,'rgba(255,230,140,.4)');for(let a=0;a<6.28;a+=.08)P(g,MCX+Math.cos(a)*Rr,MCY+Math.sin(a)*Rr,'rgba(255,255,255,.55)');if(S.eq.reel>0){const R0=RING(0)*MS;for(let a=0;a<6.28;a+=.2)P(g,MCX+Math.cos(a)*R0,MCY+Math.sin(a)*R0,'rgba(255,255,255,.3)')}
 if(F.phase==='play'){const dir=(F.vx||1)>0?1:-1,th=F.thr>0,jx=th?Math.round(Math.sin(t*40)*1.5):0,jy=th?Math.round(Math.cos(t*33)):Math.round(Math.sin(t*6)*.6);
 const mx=MCX+(F.x-CX)*MS+jx,my=MCY+(F.y-CY)*MS+jy,sp=fishSprite(1,true),w=48,h=30;
 const ox=Math.round(mx-w/2),oy=Math.round(my-h/2);line(g,MW-30,0,mx+dir*18,my-1,0,'rgba(20,20,30,.75)');
@@ -620,8 +621,9 @@ return gearC[k]=c.toDataURL()}
 function vShop(){const G=GEAR[shopTab];view.innerHTML=`<div class="panel"><h2>${ico('bag',1)}釣り具ショップ</h2><p>合計釣りパワー <b style="font-size:22px;font-weight:400">${power()}</b></p>
 <div class="tabs" style="margin:6px 0 0">${Object.keys(GEAR).map(k=>`<button class="wb sm${k===shopTab?' on':''}" data-act="tab" data-v="${k}">${GEAR[k].label}</button>`).join('')}</div></div>
 <div class="panel"><p class="muted">${G.label}：${G.eff}</p>${G.items.map((it,i)=>{const own=S.own[shopTab].includes(i)||DEV(),eq=S.eq[shopTab]===i;
-return`<div class="row"><img src="${gearIcon(shopTab,i)}" alt="" style="width:48px;height:48px;image-rendering:pixelated;flex:none;background:#efdcb4;border:2px solid #b08a5a"><div style="flex:1"><div>${it[0]}</div><div class="muted">釣りパワー ${it[1]}${own?'':`・${it[2].toLocaleString()}コイン`}</div></div>${eq?'<span class="muted">装備中</span>':own?`<button class="wb sm" data-act="equip" data-v="${i}">装備する</button>`:`<button class="wb sm gold" data-act="buy" data-v="${i}">購入</button>`}</div>`}).join('')}</div>`}
+return`<div class="row"><img src="${gearIcon(shopTab,i)}" alt="" style="width:48px;height:48px;image-rendering:pixelated;flex:none;background:#efdcb4;border:2px solid #b08a5a">${shopTab==='reel'?`<img src="${ringImg(i)}" alt="狙いの範囲" style="width:48px;height:48px;image-rendering:pixelated;flex:none;border:2px solid #b08a5a">`:''}<div style="flex:1"><div>${it[0]}</div><div class="muted">釣りパワー ${it[1]}${shopTab==='reel'?`・範囲 ×${(1+i*0.1).toFixed(1)}`:''}${own?'':`・${it[2].toLocaleString()}コイン`}</div></div>${eq?'<span class="muted">装備中</span>':own?`<button class="wb sm" data-act="equip" data-v="${i}">装備する</button>`:`<button class="wb sm gold" data-act="buy" data-v="${i}">購入</button>`}</div>`}).join('')}</div>`}
 
+const ringURL={};function ringImg(lv){if(ringURL[lv])return ringURL[lv];const c=mkc(48,48),g=c.getContext('2d'),k=1.15,cx=24,cy=24,r=RING(lv)*k;R(g,0,0,48,48,'#2a5a8a');disc(g,cx,cy,r,'#8fc4e8');disc(g,cx,cy,r*.65,'#5a9ac8');disc(g,cx,cy,r*.25,'#ffd860');if(lv>0){const r0=RING(0)*k;for(let a=0;a<6.28;a+=.35)P(g,cx+Math.cos(a)*r0,cy+Math.sin(a)*r0,'#ffffff')}return ringURL[lv]=c.toDataURL()}
 function info(id){const f=FISH[id],c=S.dex[id],s=SPOTS[f.spot],k=c||DEV();
 modal(`<div style="text-align:center"><img class="sprite l" src="${fishURL(id,!k)}" alt=""><h2 style="justify-content:center">${k?f.name:'？？？'}</h2><div class="star">${stars(f.r)}</div></div>
 <dl><dt>生息地</dt><dd>${s.name}</dd><dt>出現時間</dt><dd>${[...f.times].map(t=>t==='夕'?'夕方':t).join('・')}</dd><dt>必要パワー</dt><dd>${f.pow}</dd>${c?`<dt>初回捕獲日</dt><dd>${c.first}日目</dd><dt>最大サイズ</dt><dd>${c.max}cm</dd><dt>釣った数</dt><dd>${c.n}匹</dd>`:'<dt>状態</dt><dd>まだ釣っていない</dd>'}</dl>
@@ -630,19 +632,19 @@ modal(`<div style="text-align:center"><img class="sprite l" src="${fishURL(id,!k
 /* ---------- 釣り ---------- */
 function pickFish(si,b){const L=FISH.filter(f=>f.spot===si&&f.times.includes(b));const cnt={};L.forEach(f=>cnt[f.r]=(cnt[f.r]||0)+1);let tot=L.reduce((s,f)=>s+RW[f.r]/cnt[f.r],0),r=Math.random()*tot;for(const f of L){r-=RW[f.r]/cnt[f.r];if(r<=0)return f}return L[0]}
 function cast(){if(SPOTS[F.spot].soon){toast('この釣り場の魚は準備中です');return}if(S.min+30>MAXMIN){toast('もう夜明け前…ベッドで休もう');return}ac();const b=band(S.min);S.min+=30;const f=pickFish(F.spot,b);
-Object.assign(F,{phase:'wait',wt:1+Math.random()*2,band:b,fish:f,size:Math.round((f.min+(f.max-f.min)*Math.random()**1.6)*10)/10,g:50,x:60,y:30,tx:60,ty:60,tt:0,thr:0,def:Math.max(0,(f.pow-power())/f.pow),rip:0});
+Object.assign(F,{phase:'wait',wt:1+Math.random()*2,band:b,fish:f,size:Math.round((f.min+(f.max-f.min)*Math.random()**1.6)*10)/10,g:40,x:60,y:30,tx:60,ty:60,tt:0,thr:0,def:Math.max(0,(f.pow-power())/f.pow),rip:0});
 updTop();fishCtl();gt('待っています…');save()}
 const gt=t=>{const e=$('#gtxt');if(e)e.textContent=t};let fbT;function fb(t){const e=$('#fb');if(!e)return;e.textContent=t;e.classList.add('show');clearTimeout(fbT);fbT=setTimeout(()=>e.classList.remove('show'),600)}
-function tapFish(){if(!F||F.phase!=='play')return;const d=Math.hypot(F.x-CX,F.y-CY),Rr=16*(1+S.eq.reel*0.06);let v,m;
-if(d<=Rr*.3){v=15;m='PERFECT!'}else if(d<=Rr*.65){v=10;m='GREAT!'}else if(d<=Rr){v=5;m='GOOD!'}else{v=-5;m='MISS...'}
-v=v>0?v*(1-F.def*0.3)+S.eq.reel*0.8:v*(1+F.def*0.5);if(v>0){F.mode='out';F.thr=Math.max(F.thr,.35);F.ang+=1.5+Math.random()*3.2;F.rmax=(24+Math.random()*8)*(1+F.def*.4)*(1-S.eq.rod*.07)}F.g=clamp(F.g+v,0,100);fb(`${m} ${v>0?'+':''}${Math.round(v)}%`);se(v>0?'good':'bad');F.rip=0.4;if(F.g>=100)endFish(true)}
+function tapFish(){if(!F||F.phase!=='play')return;const d=Math.hypot(F.x-CX,F.y-CY),Rr=RING(S.eq.reel);let v,m;
+if(d<=Rr*.25){v=15;m='PERFECT!'}else if(d<=Rr*.65){v=10;m='GREAT!'}else if(d<=Rr){v=5;m='GOOD!'}else{v=-8;m='MISS...'}
+v=v>0?v*(1-F.def*0.3)+S.eq.reel*0.8:v*(1+F.def*0.5);if(v>0){F.mode='out';F.thr=Math.max(F.thr,.35);F.ang+=1.5+Math.random()*3.2;F.rmax=(30+Math.random()*10)*(1+F.def*.4)*(1-S.eq.rod*.07)}F.g=clamp(F.g+v,0,100);fb(`${m} ${v>0?'+':''}${Math.round(v)}%`);se(v>0?'good':'bad');F.rip=0.4;if(F.g>=100)endFish(true)}
 function fishStep(dt){if(!F)return;const p=F.phase;
 if(p==='wait'){F.wt-=dt;if(F.wt<=0){F.phase='hit';F.ht=1.4;se('hit');fishCtl()}}
 else if(p==='hit'){F.ht-=dt;if(F.ht<=0)missHook()}
-else if(p==='play'){const d=F.def,out=(24+F.fish.r*2)*(1+d*.8)*(1-S.eq.rod*.08)*(F.thr>0?1.8:1),pull=42*(1+S.eq.reel*0.04)*(1-d*.2);
+else if(p==='play'){const d=F.def,out=(24+F.fish.r*2)*1.5*(1+d*.8)*(1-S.eq.rod*.08)*(F.thr>0?1.8:1),pull=80*(1+S.eq.reel*0.04)*(1-d*.2);
 if(F.mode==='out'){F.r+=out*dt;if(F.r>=F.rmax){F.mode='in'}}
-else if(F.mode==='in'){F.r-=pull*dt;if(F.r<=0){F.r=0;F.mode='dwell';F.mt=.25*(1-d*.6)}}
-else{F.mt-=dt;if(F.mt<=0){F.mode='out';F.ang+=1.2+Math.random()*3.9;F.rmax=(24+Math.random()*8)*(1+d*.4)*(1-S.eq.rod*.07);if(Math.random()<(.12+d*.2)*(1-S.eq.rod*.18))F.thr=.7}}
+else if(F.mode==='in'){F.r-=pull*dt;if(F.r<=0){F.r=0;F.mode='dwell';F.mt=0}}
+else{F.mt-=dt;if(F.mt<=0){F.mode='out';F.ang+=1.2+Math.random()*3.9;F.rmax=(30+Math.random()*10)*(1+d*.4)*(1-S.eq.rod*.07);if(Math.random()<(.12+d*.2)*(1-S.eq.rod*.18))F.thr=.7}}
 const wob=Math.sin(T*7)*(1.5+d*2),ox=Math.cos(F.ang),oy=Math.sin(F.ang)*.85;
 const nx=clamp(CX+ox*F.r-oy*wob,10,150),ny=clamp(CY+oy*F.r+ox*wob,74,158);F.vx=F.mode==='in'?-(nx-F.x)||F.vx:(nx-F.x)||F.vx;F.x=nx;F.y=ny;F.thr-=dt;
 const lineK=1-S.eq.line*0.09,rodK=1-S.eq.rod*0.1;let dec=(F.def>0?3.2+F.def*12*(1-S.eq.rod*.08):1.2)*lineK;if(F.thr>0)dec+=(F.def>0?3*(1+F.def*2):1)*rodK*lineK;F.g-=dec*dt;if(F.g<=0){F.g=0;endFish(false)}}
@@ -829,7 +831,7 @@ midExtra(g,si,b,T,t);if(si===1){g.drawImage(riverBank(b,T),0,HZ);for(let i=0;i<3
 const tip=[59,126];
 if(p==='hit'){const bb=Math.round(Math.abs(Math.sin(t*10))*-3);R(g,CX-2,CY-19+bb,5,9,'#3a2414');R(g,CX-2,CY-8+bb,5,4,'#3a2414');R(g,CX-1,CY-18+bb,3,7,'#ffcf4a');R(g,CX-1,CY-7+bb,3,2,'#ffcf4a');P(g,CX-1,CY-18+bb,'#fff6c0')}
 if(p==='wait'||p==='hit'){const bob=p==='hit'?2:Math.round(Math.sin(t*3));for(let a=0;a<6.28;a+=.35){const rr=4+((t*5)%6);P(g,CX+Math.cos(a)*rr,CY+2+Math.sin(a)*rr*.5,w0)}line(g,tip[0],tip[1],CX,CY-2+bob,4,'rgba(255,255,255,.75)');R(g,CX-1,CY-2+bob,3,2,'#ffffff');R(g,CX-1,CY+bob,3,2,'#e04a3a')}
-if(p==='play'){const Rr=16*(1+S.eq.reel*0.06);for(let a=0;a<6.28;a+=.12)P(g,CX+Math.cos(a)*Rr,CY+Math.sin(a)*Rr,(Math.floor(a*4+t*6)%2)?'#ffffff':'#ffe27a');
+if(p==='play'){const Rr=RING(S.eq.reel);for(let a=0;a<6.28;a+=.12)P(g,CX+Math.cos(a)*Rr,CY+Math.sin(a)*Rr,(Math.floor(a*4+t*6)%2)?'#ffffff':'#ffe27a');
 for(let a=0;a<6.28;a+=.4)P(g,CX+Math.cos(a)*Rr*.3,CY+Math.sin(a)*Rr*.3,'rgba(255,255,255,.7)');P(g,CX,CY,'#ffe27a');
 const s=4+F.fish.r,dir=(F.vx||1)>0?1:-1;g.fillStyle='rgba(8,16,32,.62)';for(let y=-s*.5;y<=s*.5;y++)for(let x=-s;x<=s;x++)if((x/s)**2+(y/(s*.5))**2<=1)g.fillRect(Math.round(F.x+x),Math.round(F.y+y),1,1);
 const tw=Math.sin(t*14)*1.5;for(let k=0;k<4;k++)g.fillRect(Math.round(F.x-dir*(s+k)),Math.round(F.y-k*.6+tw*k/4),1,Math.max(1,k*1.2+1)|0);
