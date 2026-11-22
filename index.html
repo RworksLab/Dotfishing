@@ -341,7 +341,7 @@ function go(s){if(scr==='fishing'&&F&&['cast','wait','hit','play'].includes(F.ph
 function render(){aqAll=DEV();updTop();cvMode='';mapOpen=false;view.classList.toggle('full',scr==='aqua'||scr==='fishing'||scr==='home'||scr==='spots');({cooler:vCooler,closet:vCloset,home:vHome,spots:vSpots,fishing:vFishing,aqua:vAqua,dex:vDex,shop:vShop,quests:vQuests})[scr]();view.scrollTop=0}
 
 function questRows(){return S.quests.map((q,i)=>{const o=qInfo(q);return`<div class="row"><div><div><span class="tag" style="background:${['#4a9a4a','#d08a10','#c8403a'][i]}">${q.d}</span> ${o.txt}</div><div class="muted">${o.cur}/${o.need}・報酬 ${q.rw}コイン</div></div>${q.got?'<span class="muted">受取済</span>':o.ok?`<button class="wb sm gold" data-act="claim" data-v="${i}">受け取る</button>`:'<span class="muted">未達成</span>'}</div>`}).join('')}
-const DEV=()=>false;const VER='1.0.9';
+const DEV=()=>false;const VER='1.0.10';
 let HOFF=0,homeCv=null;const extC={};
 function vHome(){const inv=S.inv,ready=S.quests.filter(q=>!q.got&&qInfo(q).ok).length;
 view.innerHTML=`<div id="hmBox" style="position:relative;height:100%;overflow:hidden;background:#0c0f18">
@@ -633,23 +633,24 @@ modal(`<div style="text-align:center"><img class="sprite l" src="${fishURL(id,!k
 /* ---------- 釣り ---------- */
 function pickFish(si,b){const L=FISH.filter(f=>f.spot===si&&f.times.includes(b));const cnt={};L.forEach(f=>cnt[f.r]=(cnt[f.r]||0)+1);let tot=L.reduce((s,f)=>s+RW[f.r]/cnt[f.r],0),r=Math.random()*tot;for(const f of L){r-=RW[f.r]/cnt[f.r];if(r<=0)return f}return L[0]}
 function cast(){if(SPOTS[F.spot].soon){toast('この釣り場の魚は準備中です');return}if(S.min+30>MAXMIN){toast('もう夜明け前…ベッドで休もう');return}ac();const b=band(S.min);S.min+=30;const f=pickFish(F.spot,b);
-Object.assign(F,{phase:'cast',ct:0,sw:0,spl:0,wt:1+Math.random()*2,band:b,fish:f,size:Math.round((f.min+(f.max-f.min)*Math.random()**1.6)*10)/10,g:40,x:60,y:30,tx:60,ty:60,tt:0,thr:0,def:Math.max(0,(f.pow-power())/f.pow),ez:clamp(power()/f.pow-1,0,1),rip:0});
+Object.assign(F,{phase:'cast',ct:0,sw:0,spl:0,wt:1+Math.random()*2,band:b,fish:f,size:Math.round((f.min+(f.max-f.min)*Math.random()**1.6)*10)/10,g:40,x:60,y:30,tx:60,ty:60,tt:0,thr:0,def:Math.max(0,(f.pow-power())/f.pow),ez:clamp(power()/f.pow-1,0,1),gf:clamp(1-Math.max(0,(f.pow-power())/f.pow)*4,0,1),fk:0,rip:0});
 updTop();fishCtl();gt('待っています…');save()}
 const gt=t=>{const e=$('#gtxt');if(e)e.textContent=t};let fbT;function fb(t){const e=$('#fb');if(!e)return;e.textContent=t;e.classList.add('show');clearTimeout(fbT);fbT=setTimeout(()=>e.classList.remove('show'),600)}
 function tapFish(){if(!F||F.phase!=='play')return;const d=Math.hypot(F.x-CX,F.y-CY),Rr=RING(S.eq.reel);let v,m;
 if(d<=Rr*.25){v=15;m='PERFECT!'}else if(d<=Rr*.65){v=10;m='GREAT!'}else if(d<=Rr){v=5;m='GOOD!'}else{v=-8;m='MISS...'}
-v=v>0?v*(1-F.def)*(1+(F.ez||0)*.3)+S.eq.reel*0.8:v*(1+F.def)*(1-(F.ez||0)*.5);if(v>0){F.mode='out';F.thr=Math.max(F.thr,.35);F.ang+=1.5+Math.random()*3.2;F.rmax=(30+Math.random()*10)*(1+F.def*.4)*(1-S.eq.rod*.07)}F.g=clamp(F.g+v,0,100);fb(`${m} ${v>0?'+':''}${Math.round(v)}%`);se(v>0?'good':'bad');F.rip=0.4;if(F.g>=100)endFish(true)}
+v=v>0?v*(1-F.def)*(1+(F.ez||0)*.3)+S.eq.reel*0.8*F.gf:v*(1+F.def)*(1-(F.ez||0)*.5);if(v>0){F.mode='out';F.thr=Math.max(F.thr,.35);F.ang+=1.5+Math.random()*3.2;F.rmax=(30+Math.random()*10)*(1+F.def*.4)*(1-S.eq.rod*.07*F.gf);F.fk=feint()}F.g=clamp(F.g+v,0,100);fb(`${m} ${v>0?'+':''}${Math.round(v)}%`);se(v>0?'good':'bad');F.rip=0.4;if(F.g>=100)endFish(true)}
+function feint(){const d=F.def,ez=F.ez||0;if(F.fish.r<2)return 0;return Math.random()<(.15+d*.4)*(1-ez*.7)?RING(S.eq.reel)*(1.15+Math.random()*.4):0}
 function fishStep(dt){if(!F)return;const p=F.phase;
 if(p==='cast'){F.ct+=dt;if(F.ct>=.3&&!F.sw){F.sw=1;se('cast')}if(F.ct>=.85){F.phase='wait';F.spl=.6;se('plop');fishCtl()}}
 else if(p==='wait'){F.wt-=dt;F.spl=Math.max(0,F.spl-dt);if(F.wt<=0){F.phase='hit';F.ht=1.4;se('hit');fishCtl()}}
 else if(p==='hit'){F.ht-=dt;if(F.ht<=0)missHook()}
-else if(p==='play'){const d=F.def,ez=F.ez||0,out=(24+F.fish.r*2)*1.5*(1+d*1.2)*(1-ez*.35)*(1-S.eq.rod*.08)*(F.thr>0?1.8:1),pull=80*(1+S.eq.reel*0.04)*(1+d*.3)*(1-ez*.3);
+else if(p==='play'){const d=F.def,ez=F.ez||0,gf=F.gf,out=(24+F.fish.r*2)*1.5*(1+d*1.2)*(1-ez*.35)*(1-S.eq.rod*.08*gf)*(F.thr>0?1.8:1),pull=80*(1+S.eq.reel*0.04*gf)*(1+d*.3)*(1-ez*.3);
 if(F.mode==='out'){F.r+=out*dt;if(F.r>=F.rmax){F.mode='in'}}
-else if(F.mode==='in'){F.r-=pull*dt;if(F.r<=0){F.r=0;F.mode='dwell';F.mt=0}}
-else{F.mt-=dt;if(F.mt<=0){F.mode='out';F.ang+=1.2+Math.random()*3.9;F.rmax=(30+Math.random()*10)*(1+d*.4)*(1-S.eq.rod*.07);if(Math.random()<(.15+d*.5)*(1-ez*.6)*(1-S.eq.rod*.18))F.thr=.7}}
+else if(F.mode==='in'){F.r-=pull*(F.fk&&F.r<F.fk+10?.45:1)*dt;if(F.fk&&F.r<=F.fk){F.mode='out';F.fk=0;F.rmax=(30+Math.random()*10)*(1+d*.4)*(1-S.eq.rod*.07*gf)}else if(F.r<=0){F.r=0;F.mode='dwell';F.mt=0}}
+else{F.mt-=dt;if(F.mt<=0){F.mode='out';F.ang+=1.2+Math.random()*3.9;F.rmax=(30+Math.random()*10)*(1+d*.4)*(1-S.eq.rod*.07*gf);F.fk=feint();if(Math.random()<(.15+d*.5)*(1-ez*.6)*(1-S.eq.rod*.18*gf))F.thr=.7}}
 const wob=Math.sin(T*7)*(1.5+d*2),ox=Math.cos(F.ang),oy=Math.sin(F.ang)*.85;
 const nx=clamp(CX+ox*F.r-oy*wob,10,150),ny=clamp(CY+oy*F.r+ox*wob,74,158);F.vx=F.mode==='in'?-(nx-F.x)||F.vx:(nx-F.x)||F.vx;F.x=nx;F.y=ny;F.thr-=dt;
-const lineK=1-S.eq.line*0.09,rodK=1-S.eq.rod*0.1;let dec=(d>0?7+d*14*(1-S.eq.rod*.08):7*(1-ez*.85))*lineK;if(F.thr>0)dec+=(1+d*6)*rodK*lineK;F.g-=dec*dt;if(F.g<=0){F.g=0;endFish(false)}}
+const lineK=1-S.eq.line*0.09*gf,rodK=1-S.eq.rod*0.1*gf;let dec=(d>0?7+d*14:7*(1-ez*.85))*lineK;if(F.thr>0)dec+=(1+d*6)*rodK*lineK;F.g-=dec*dt;if(F.g<=0){F.g=0;endFish(false)}}
 const gb=$('#gbar');if(gb){gb.style.width=F.g+'%';gb.style.background=F.g<25?'#e0503a':F.g<60?'#e8c040':'#6fd04a';if(F.phase==='play')gt(Math.round(F.g)+'%')}}
 function flash(r){const d=document.createElement('div');d.style.cssText=`position:absolute;inset:0;z-index:30;pointer-events:none;background:${r>=5?'#fff3c0':'#f0e0ff'};opacity:.85;transition:opacity .6s`;$('#app').appendChild(d);requestAnimationFrame(()=>requestAnimationFrame(()=>d.style.opacity=0));setTimeout(()=>d.remove(),700)}
 function catchSE(r,special){if(!S)return;const v=S.set.se;if(r<=2){se('win');if(special)tone(1568,.15,'square',v,.45);return}
