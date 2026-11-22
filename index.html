@@ -184,7 +184,7 @@ const FD=`コイ|1|朝昼|10|30|70|n|#8a7a4a|#d8c89a|#6a5a30||池の主ともい
 白銀クエ|5|夜|140|80|150|r|#d8e0e8|#ffffff|#3a7ad0|m|銀白色の巨体に青い模様を持つ、特別なクエ。`;
 const FISH=FD.split('\n').map((l,i)=>{const a=l.split('|');return{i,name:a[0],r:+a[1],times:a[2],pow:+a[3],min:+a[4],max:+a[5],shape:a[6],c1:a[7],c2:a[8],c3:a[9],pat:a[10],desc:a[11],spot:Math.floor(i/10)}});
 const GEAR={rod:{label:'釣り竿',eff:'魚の抵抗を抑える（暴れにくく、逃げる勢いが弱まる）',items:[['木製の釣り竿',5,0],['竹製の釣り竿',15,650],['カーボンロッド',28,2300],['高性能カーボンロッド',42,7800],['マスターロッド',60,23000]]},
-reel:{label:'リール',eff:'回復量アップ、狙いの範囲が広がる（図の黄色がPERFECT、白い点線は最初のリールの範囲）',items:[['初心者リール',3,0],['スピニングリール',10,500],['高性能リール',18,2000],['プロリール',28,6500],['マスターリール',45,19500]]},
+reel:{label:'リール',eff:'回復量アップ、狙いの範囲が広がる',items:[['初心者リール',3,0],['スピニングリール',10,500],['高性能リール',18,2000],['プロリール',28,6500],['マスターリール',45,19500]]},
 line:{label:'釣り糸',eff:'時間経過と抵抗によるゲージ減少を軽減',items:[['麻の釣り糸',2,0],['ナイロンライン',8,400],['フロロカーボンライン',15,1600],['高強度PEライン',25,5200],['特殊強化ライン',40,15500]]}};
 const RW=[0,45,30,16,7,2],BASEP=[0,30,70,160,400,1000],SPM=[1,1.5,2.2,3,4,5,6.5];
 const WAKE=[['朝まで寝る',360],['昼まで寝る',720],['夕方まで寝る',1020],['夜まで寝る',1200]];
@@ -341,7 +341,7 @@ function go(s){if(scr==='fishing'&&F&&['wait','hit','play'].includes(F.phase)&&s
 function render(){aqAll=DEV();updTop();cvMode='';mapOpen=false;view.classList.toggle('full',scr==='aqua'||scr==='fishing'||scr==='home'||scr==='spots');({cooler:vCooler,closet:vCloset,home:vHome,spots:vSpots,fishing:vFishing,aqua:vAqua,dex:vDex,shop:vShop,quests:vQuests})[scr]();view.scrollTop=0}
 
 function questRows(){return S.quests.map((q,i)=>{const o=qInfo(q);return`<div class="row"><div><div><span class="tag" style="background:${['#4a9a4a','#d08a10','#c8403a'][i]}">${q.d}</span> ${o.txt}</div><div class="muted">${o.cur}/${o.need}・報酬 ${q.rw}コイン</div></div>${q.got?'<span class="muted">受取済</span>':o.ok?`<button class="wb sm gold" data-act="claim" data-v="${i}">受け取る</button>`:'<span class="muted">未達成</span>'}</div>`}).join('')}
-const DEV=()=>false;const VER='1.0.6';
+const DEV=()=>false;const VER='1.0.7';
 let HOFF=0,homeCv=null;const extC={};
 function vHome(){const inv=S.inv,ready=S.quests.filter(q=>!q.got&&qInfo(q).ok).length;
 view.innerHTML=`<div id="hmBox" style="position:relative;height:100%;overflow:hidden;background:#0c0f18">
@@ -499,7 +499,7 @@ function disc(g,cx,cy,r,col){g.fillStyle=col;for(let y=-r;y<=r;y++){const w=Math
 function drawMini(g,t){if(!F)return;const si=F.spot;g.drawImage(miniBg(si),0,0);
 g.globalCompositeOperation='lighter';for(let k=0;k<4;k++){const x=20+k*38+Math.sin(t*.5+k)*8;g.fillStyle='rgba(255,255,255,.05)';g.beginPath();g.moveTo(x,0);g.lineTo(x+12,0);g.lineTo(x+40,MH);g.lineTo(x+18,MH);g.fill()}g.globalCompositeOperation='source-over';
 for(let k=0;k<26;k++){const x=(k*53+Math.sin(t*.4+k)*6)%MW,y=(k*37+t*(2+k%3))%MH;P(g,x,y,'rgba(255,255,255,.25)')}
-const Rr=RING(S.eq.reel)*MS;disc(g,MCX,MCY,Rr,'rgba(200,230,255,.22)');disc(g,MCX,MCY,Rr*.65,'rgba(8,24,60,.24)');disc(g,MCX,MCY,Rr*.25,'rgba(255,230,140,.4)');for(let a=0;a<6.28;a+=.08)P(g,MCX+Math.cos(a)*Rr,MCY+Math.sin(a)*Rr,'rgba(255,255,255,.55)');if(S.eq.reel>0){const R0=RING(0)*MS;for(let a=0;a<6.28;a+=.2)P(g,MCX+Math.cos(a)*R0,MCY+Math.sin(a)*R0,'rgba(255,255,255,.3)')}
+const Rr=RING(S.eq.reel)*MS;disc(g,MCX,MCY,Rr,'rgba(200,230,255,.2)');disc(g,MCX,MCY,Rr*.65,'rgba(8,24,60,.22)');disc(g,MCX,MCY,Rr*.25,'rgba(200,230,255,.3)');
 if(F.phase==='play'){const dir=(F.vx||1)>0?1:-1,th=F.thr>0,jx=th?Math.round(Math.sin(t*40)*1.5):0,jy=th?Math.round(Math.cos(t*33)):Math.round(Math.sin(t*6)*.6);
 const mx=MCX+(F.x-CX)*MS+jx,my=MCY+(F.y-CY)*MS+jy,sp=fishSprite(1,true),w=48,h=30;
 const ox=Math.round(mx-w/2),oy=Math.round(my-h/2);line(g,MW-30,0,mx+dir*18,my-1,0,'rgba(20,20,30,.75)');
@@ -621,9 +621,8 @@ return gearC[k]=c.toDataURL()}
 function vShop(){const G=GEAR[shopTab];view.innerHTML=`<div class="panel"><h2>${ico('bag',1)}釣り具ショップ</h2><p>合計釣りパワー <b style="font-size:22px;font-weight:400">${power()}</b></p>
 <div class="tabs" style="margin:6px 0 0">${Object.keys(GEAR).map(k=>`<button class="wb sm${k===shopTab?' on':''}" data-act="tab" data-v="${k}">${GEAR[k].label}</button>`).join('')}</div></div>
 <div class="panel"><p class="muted">${G.label}：${G.eff}</p>${G.items.map((it,i)=>{const own=S.own[shopTab].includes(i)||DEV(),eq=S.eq[shopTab]===i;
-return`<div class="row"><img src="${gearIcon(shopTab,i)}" alt="" style="width:48px;height:48px;image-rendering:pixelated;flex:none;background:#efdcb4;border:2px solid #b08a5a">${shopTab==='reel'?`<img src="${ringImg(i)}" alt="狙いの範囲" style="width:48px;height:48px;image-rendering:pixelated;flex:none;border:2px solid #b08a5a">`:''}<div style="flex:1"><div>${it[0]}</div><div class="muted">釣りパワー ${it[1]}${shopTab==='reel'?`・範囲 ×${(1+i*0.1).toFixed(1)}`:''}${own?'':`・${it[2].toLocaleString()}コイン`}</div></div>${eq?'<span class="muted">装備中</span>':own?`<button class="wb sm" data-act="equip" data-v="${i}">装備する</button>`:`<button class="wb sm gold" data-act="buy" data-v="${i}">購入</button>`}</div>`}).join('')}</div>`}
+return`<div class="row"><img src="${gearIcon(shopTab,i)}" alt="" style="width:48px;height:48px;image-rendering:pixelated;flex:none;background:#efdcb4;border:2px solid #b08a5a"><div style="flex:1"><div>${it[0]}</div><div class="muted">釣りパワー ${it[1]}${own?'':`・${it[2].toLocaleString()}コイン`}</div></div>${eq?'<span class="muted">装備中</span>':own?`<button class="wb sm" data-act="equip" data-v="${i}">装備する</button>`:`<button class="wb sm gold" data-act="buy" data-v="${i}">購入</button>`}</div>`}).join('')}</div>`}
 
-const ringURL={};function ringImg(lv){if(ringURL[lv])return ringURL[lv];const c=mkc(48,48),g=c.getContext('2d'),k=1.15,cx=24,cy=24,r=RING(lv)*k;R(g,0,0,48,48,'#2a5a8a');disc(g,cx,cy,r,'#8fc4e8');disc(g,cx,cy,r*.65,'#5a9ac8');disc(g,cx,cy,r*.25,'#ffd860');if(lv>0){const r0=RING(0)*k;for(let a=0;a<6.28;a+=.35)P(g,cx+Math.cos(a)*r0,cy+Math.sin(a)*r0,'#ffffff')}return ringURL[lv]=c.toDataURL()}
 function info(id){const f=FISH[id],c=S.dex[id],s=SPOTS[f.spot],k=c||DEV();
 modal(`<div style="text-align:center"><img class="sprite l" src="${fishURL(id,!k)}" alt=""><h2 style="justify-content:center">${k?f.name:'？？？'}</h2><div class="star">${stars(f.r)}</div></div>
 <dl><dt>生息地</dt><dd>${s.name}</dd><dt>出現時間</dt><dd>${[...f.times].map(t=>t==='夕'?'夕方':t).join('・')}</dd><dt>必要パワー</dt><dd>${f.pow}</dd>${c?`<dt>初回捕獲日</dt><dd>${c.first}日目</dd><dt>最大サイズ</dt><dd>${c.max}cm</dd><dt>釣った数</dt><dd>${c.n}匹</dd>`:'<dt>状態</dt><dd>まだ釣っていない</dd>'}</dl>
