@@ -341,7 +341,7 @@ function go(s){if(scr==='fishing'&&F&&['cast','wait','hit','play'].includes(F.ph
 function render(){aqAll=DEV();updTop();cvMode='';mapOpen=false;view.classList.toggle('full',scr==='aqua'||scr==='fishing'||scr==='home'||scr==='spots');({cooler:vCooler,closet:vCloset,home:vHome,spots:vSpots,fishing:vFishing,aqua:vAqua,dex:vDex,shop:vShop,quests:vQuests})[scr]();view.scrollTop=0}
 
 function questRows(){return S.quests.map((q,i)=>{const o=qInfo(q);return`<div class="row"><div><div><span class="tag" style="background:${['#4a9a4a','#d08a10','#c8403a'][i]}">${q.d}</span> ${o.txt}</div><div class="muted">${o.cur}/${o.need}・報酬 ${q.rw}コイン</div></div>${q.got?'<span class="muted">受取済</span>':o.ok?`<button class="wb sm gold" data-act="claim" data-v="${i}">受け取る</button>`:'<span class="muted">未達成</span>'}</div>`}).join('')}
-const DEV=()=>false;const VER='1.0.10';
+const DEV=()=>false;const VER='1.0.11';
 let HOFF=0,homeCv=null;const extC={};
 function vHome(){const inv=S.inv,ready=S.quests.filter(q=>!q.got&&qInfo(q).ok).length;
 view.innerHTML=`<div id="hmBox" style="position:relative;height:100%;overflow:hidden;background:#0c0f18">
@@ -589,7 +589,7 @@ function vFishing(){const s=SPOTS[F.spot];view.innerHTML=`<div id="fsBox" style=
 <div id="fb"></div><div id="fctl" style="position:absolute;left:8px;right:8px;bottom:8px"></div></div>`;
 const cv=$('#cv'),bx=$('#fsBox');cv.width=FW;const h=Math.max(FH,Math.floor(bx.clientHeight*FW/bx.clientWidth));cv.height=h;FOFF=Math.max(0,h-FH-Math.round(150*FW/bx.clientWidth));cvMode='fish';fishCtl()}
 function fishCtl(){const e=$('#fctl');if(!e)return;const p=F.phase,msg=t=>`<div style="text-align:center"><span class="pill" style="display:inline-flex;font-size:16px;padding:2px 12px">${t}</span></div>`;
-e.innerHTML=p==='idle'||p==='done'?`<button class="wb big gold" data-act="cast">${ico('rod')}キャストする（30分経過）</button><div class="btns" style="margin:6px 0 0"><button class="wb sm" data-act="go" data-v="spots">釣り場を変える</button><button class="wb sm" data-act="go" data-v="home">ホームへ</button></div>`:(p==='cast'?'':p==='wait'?msg('ウキがしずんだらタップ！'):`<div style="text-align:center"><span class="pill" style="display:inline-flex;font-size:22px;padding:6px 18px;color:#ffcf4a">ヒット！今すぐタップ！</span></div>`)}
+e.innerHTML=p==='idle'||p==='done'?`<button class="wb big gold" data-act="cast">${ico('rod')}キャストする</button><div class="btns" style="margin:6px 0 0"><button class="wb sm" data-act="go" data-v="spots">釣り場を変える</button><button class="wb sm" data-act="go" data-v="home">ホームへ</button></div>`:(p==='cast'?'':p==='wait'?msg('ウキがしずんだらタップ！'):`<div style="text-align:center"><span class="pill" style="display:inline-flex;font-size:22px;padding:6px 18px;color:#ffcf4a">ヒット！今すぐタップ！</span></div>`)}
 function vAqua(){view.innerHTML=`<div id="aqBox" style="position:relative;height:100%;overflow:hidden;background:#0c0f18">
 <canvas id="cv" style="width:100%;display:block;image-rendering:pixelated;touch-action:manipulation" aria-label="水族館の館内。床をタップで移動、水槽や看板や魚をタップで説明"></canvas>
 <div class="pill" id="aqLabel" style="position:absolute;left:6px;top:4px;font-size:13px"></div>
@@ -632,7 +632,7 @@ modal(`<div style="text-align:center"><img class="sprite l" src="${fishURL(id,!k
 
 /* ---------- 釣り ---------- */
 function pickFish(si,b){const L=FISH.filter(f=>f.spot===si&&f.times.includes(b));const cnt={};L.forEach(f=>cnt[f.r]=(cnt[f.r]||0)+1);let tot=L.reduce((s,f)=>s+RW[f.r]/cnt[f.r],0),r=Math.random()*tot;for(const f of L){r-=RW[f.r]/cnt[f.r];if(r<=0)return f}return L[0]}
-function cast(){if(SPOTS[F.spot].soon){toast('この釣り場の魚は準備中です');return}if(S.min+30>MAXMIN){toast('もう夜明け前…ベッドで休もう');return}ac();const b=band(S.min);S.min+=30;const f=pickFish(F.spot,b);
+function cast(){if(SPOTS[F.spot].soon){toast('この釣り場の魚は準備中です');return}if(S.min+30>MAXMIN){toast('もう夜明け前…ベッドで休もう');return}ac();const b=band(S.min);const f=pickFish(F.spot,b);
 Object.assign(F,{phase:'cast',ct:0,sw:0,spl:0,wt:1+Math.random()*2,band:b,fish:f,size:Math.round((f.min+(f.max-f.min)*Math.random()**1.6)*10)/10,g:40,x:60,y:30,tx:60,ty:60,tt:0,thr:0,def:Math.max(0,(f.pow-power())/f.pow),ez:clamp(power()/f.pow-1,0,1),gf:clamp(1-Math.max(0,(f.pow-power())/f.pow)*4,0,1),fk:0,rip:0});
 updTop();fishCtl();gt('待っています…');save()}
 const gt=t=>{const e=$('#gtxt');if(e)e.textContent=t};let fbT;function fb(t){const e=$('#fb');if(!e)return;e.textContent=t;e.classList.add('show');clearTimeout(fbT);fbT=setTimeout(()=>e.classList.remove('show'),600)}
@@ -665,7 +665,7 @@ requestAnimationFrame(step)};step()}
 function hookTap(){if(!F)return;if(F.phase==='hit'){F.phase='play';Object.assign(F,{x:CX,y:CY,r:0,ang:Math.random()*6.28,mode:'dwell',mt:.5,vx:1});se('good');if(scr==='fishing')vMini()}else if(F.phase==='wait'){F.phase='idle';fishCtl();gt('');toast('糸を巻き上げた');save()}}
 function missHook(){F.phase='done';fishCtl();se('lose');modal(`<h2>エサを取られた…</h2><p>ヒットしたら、すぐに画面をタップしよう。</p><button class="wb big" data-act="close">閉じる</button>`);save()}
 function endFish(ok){F.phase='done';if(cvMode==='mini')vFishing();fishCtl();if(!ok){se('lose');gt('逃げられた…');const dm=F.def>.3?'この魚には釣りパワーが大きく足りなかったようだ。ショップで釣り具を強化しよう。':F.def>0?'釣りパワーが少し足りなかったようだ。釣り具を強化すると楽に釣れるはず。':'魚がリングの中心に来たら落ち着いてタップしよう。';modal(`<h2>逃げられた…</h2><p>${dm}</p><button class="wb big" data-act="close">閉じる</button>`);save();return}
-const f=F.fish,size=F.size,isNew=!S.dex[f.i],prevMax=S.dex[f.i]?S.dex[f.i].max:0,sizeUp=!isNew&&size>prevMax,before=S.quests.filter(q=>qInfo(q).ok).length;const d=S.dex[f.i]||{first:S.day,max:0,n:0};d.n++;if(size>d.max)d.max=size;S.dex[f.i]=d;
+S.min=Math.min(MAXMIN,S.min+30);updTop();const f=F.fish,size=F.size,isNew=!S.dex[f.i],prevMax=S.dex[f.i]?S.dex[f.i].max:0,sizeUp=!isNew&&size>prevMax,before=S.quests.filter(q=>qInfo(q).ok).length;const d=S.dex[f.i]||{first:S.day,max:0,n:0};d.n++;if(size>d.max)d.max=size;S.dex[f.i]=d;
 S.today.push({id:f.i,size,spot:SPOTS[f.spot].id,band:F.band});const qn=S.quests.filter(q=>qInfo(q).ok).length>before,pr=priceOf(f,size);F.last={id:f.i,size};catchSE(f.r,sizeUp||isNew);gt('釣れた！');save();if(f.r>=4)flash(f.r);
 const RL=['','','','レア！','スーパーレア！','ウルトラレア！！'][f.r],RC=['','','','#3a7ad0','#8a4ad0','#d89a10'][f.r];
 modal(`<div style="text-align:center"><p style="margin:0;display:flex;gap:6px;justify-content:center;flex-wrap:wrap">${RL?`<span class="tag pop" style="background:${RC};font-size:16px">${RL}</span>`:''}${isNew?'<span class="tag pop d1">NEW! 図鑑と水族館に登録</span>':''}${sizeUp?`<span class="tag pop d2" style="background:#e07a1a">サイズ更新！</span>`:''}${!RL&&!isNew&&!sizeUp?'釣れた！':''}</p>
